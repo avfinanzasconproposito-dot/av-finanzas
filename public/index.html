@@ -2,475 +2,293 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>7 Hábitos de las Personas Ahorrativas</title>
 <meta name="description" content="App complementaria del libro de Anabella Vanesa - Finanzas con Propósito">
-
-<!-- PWA -->
-<link rel="manifest" href="/manifest.json">
+<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1A3C34">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="7 Hábitos">
-<link rel="apple-touch-icon" href="/icons/icon-192.png">
-
-<!-- Supabase -->
+<link rel="apple-touch-icon" href="logo.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-:root {
-  --verde: #1D9E75;
-  --verde-claro: #E1F5EE;
-  --verde-oscuro: #0F6E56;
-  --verde-fondo: #1A3C34;
-  --dorado: #BA7517;
-  --dorado-claro: #FAEEDA;
-  --dorado-medio: #C9963A;
-  --dorado-brillante: #D4AF5A;
-}
-html, body {
-  height: 100%;
-  font-family: Arial, sans-serif;
-  background: var(--verde-fondo);
-  overflow: hidden;
-}
-.app {
-  max-width: 430px;
-  margin: 0 auto;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: #fafafa;
-  position: relative;
-  overflow: hidden;
-}
-
-/* ── PANTALLAS ── */
-.screen { display: none; flex-direction: column; height: 100%; overflow: hidden; }
-.screen.active { display: flex; }
-
-/* ── REGISTRO ── */
-.qr-bg {
-  background: var(--verde-fondo);
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 24px 20px;
-  overflow-y: auto;
-}
-.logo-wrap {
-  width: 180px; height: 130px;
-  margin: 0 auto 16px;
-  border-radius: 14px;
-  overflow: hidden;
-  border: 2px solid var(--dorado-medio);
-}
-.logo-wrap img { width: 100%; height: 100%; object-fit: cover; }
-.logo-titulo {
-  font-family: Georgia, serif;
-  font-size: 13px;
-  color: var(--dorado-brillante);
-  text-align: center;
-  margin-bottom: 4px;
-}
-.logo-sub {
-  font-size: 10px;
-  color: #9FD4BE;
-  text-align: center;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin-bottom: 20px;
-}
-.register-card {
-  background: white;
-  border-radius: 20px;
-  padding: 20px 18px;
-  width: 100%;
-  border-top: 4px solid var(--dorado-medio);
-}
-.reg-titulo { font-family: Georgia, serif; font-size: 16px; color: var(--verde-fondo); text-align: center; margin-bottom: 4px; }
-.reg-sub { font-size: 11px; color: #999; text-align: center; margin-bottom: 16px; line-height: 1.5; }
-.field-label { font-size: 11px; color: #777; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
-.field-input {
-  width: 100%; padding: 11px 13px;
-  border: 1.5px solid #e0e0e0; border-radius: 10px;
-  font-size: 15px; font-family: Arial, sans-serif;
-  margin-bottom: 13px; outline: none;
-}
-.field-input:focus { border-color: var(--verde); }
-.btn-acceder {
-  width: 100%; padding: 14px;
-  background: var(--verde-fondo); color: var(--dorado-brillante);
-  border: none; border-radius: 12px;
-  font-size: 15px; font-family: Georgia, serif; cursor: pointer;
-}
-.btn-acceder:active { background: var(--verde-oscuro); }
-.error-box {
-  background: #FEECEC; border: 1px solid #f5c0c0;
-  border-radius: 10px; padding: 10px 13px;
-  margin-top: 10px; font-size: 12px; color: #C0392B;
-  text-align: center; display: none;
-}
-.codigo-info { text-align: center; margin-top: 12px; font-size: 11px; color: #9FD4BE; line-height: 1.6; }
-
-/* ── LOADING ── */
-.loading-screen {
-  background: var(--verde-fondo);
-  flex: 1; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 16px;
-}
-.loader {
-  width: 44px; height: 44px; border-radius: 50%;
-  border: 4px solid rgba(212,175,90,0.3);
-  border-top-color: var(--dorado-brillante);
-  animation: spin 0.8s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-.loading-text { color: var(--dorado-brillante); font-family: Georgia, serif; font-size: 14px; }
-
-/* ── HEADER ── */
-.app-header {
-  background: var(--verde-fondo);
-  padding: 10px 14px 8px;
-  border-bottom: 2px solid var(--dorado-medio);
-  display: flex; align-items: center; gap: 10px;
-  flex-shrink: 0;
-}
-.header-logo { width: 56px; height: 40px; border-radius: 8px; overflow: hidden; border: 1px solid var(--dorado-medio); flex-shrink: 0; }
-.header-logo img { width: 100%; height: 100%; object-fit: cover; }
-.header-texts { flex: 1; }
-.header-brand { font-family: Georgia, serif; font-size: 13px; color: var(--dorado-brillante); }
-.header-sub { font-size: 9px; color: #9FD4BE; letter-spacing: 1.5px; text-transform: uppercase; }
-.header-saludo { font-size: 12px; color: #7FC4A8; margin-top: 1px; }
-
-/* ── NAV ── */
-.nav-tabs { display: flex; background: white; border-bottom: 1px solid #eee; flex-shrink: 0; }
-.nav-tab { flex: 1; padding: 8px 2px 6px; font-size: 10px; color: #aaa; text-align: center; cursor: pointer; border-bottom: 2px solid transparent; user-select: none; }
-.nav-tab.active { color: var(--verde); border-bottom-color: var(--verde); font-weight: 700; }
-.nav-tab-icon { display: block; font-size: 18px; margin-bottom: 1px; }
-
-/* ── CONTENIDO ── */
-.content { flex: 1; overflow-y: auto; padding: 14px; -webkit-overflow-scrolling: touch; }
-
-/* ── CARDS ── */
-.greeting-card {
-  background: linear-gradient(135deg, var(--verde-fondo), var(--verde-oscuro));
-  border-radius: 14px; padding: 14px 16px; margin-bottom: 12px;
-  border: 1px solid var(--dorado-medio);
-}
-.greeting-title { font-family: Georgia, serif; font-size: 15px; color: var(--dorado-brillante); }
-.greeting-book { font-size: 11px; color: #9FD4BE; margin-top: 3px; }
-.streak-badge { display: inline-flex; align-items: center; gap: 3px; background: var(--dorado-claro); color: var(--dorado); font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; margin-top: 8px; }
-
-.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 12px; }
-.stat-card { background: white; border: 1px solid #eee; border-radius: 12px; padding: 11px; }
-.stat-label { font-size: 10px; color: #aaa; margin-bottom: 3px; }
-.stat-value { font-family: Georgia, serif; font-size: 20px; font-weight: 700; color: var(--verde); }
-.stat-value.dorado { color: var(--dorado); }
-.stat-unit { font-size: 10px; color: #ccc; }
-.progress-bar { background: #f0f0f0; border-radius: 4px; height: 5px; margin-top: 5px; overflow: hidden; }
-.progress-fill { height: 100%; border-radius: 4px; background: var(--verde); transition: width 0.3s; }
-.progress-fill.dorado { background: var(--dorado-medio); }
-
-.section-title { font-family: Georgia, serif; font-size: 13px; color: #333; margin-bottom: 9px; font-weight: 700; }
-
-.quick-card { background: white; border: 1px solid #eee; border-radius: 12px; padding: 12px 13px; display: flex; align-items: center; gap: 11px; cursor: pointer; margin-bottom: 9px; }
-.quick-card:active { background: #f5f5f5; }
-.quick-icon { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-.quick-icon.verde { background: var(--verde-claro); }
-.quick-icon.dorado { background: var(--dorado-claro); }
-.quick-name { font-size: 13px; font-weight: 700; color: #333; }
-.quick-desc { font-size: 11px; color: #aaa; margin-top: 1px; }
-.db-badge { background: var(--verde-claro); border-radius: 8px; padding: 8px 12px; margin-top: 10px; font-size: 11px; color: var(--verde-oscuro); text-align: center; border: 1px solid #b3e5d4; }
-
-/* ── TRACKER ── */
-.tracker-row { display: flex; align-items: center; gap: 11px; padding: 12px 0; border-bottom: 1px solid #f5f5f5; }
-.tracker-row:last-child { border-bottom: none; }
-.tracker-check { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #ddd; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; font-size: 14px; transition: all 0.2s; }
-.tracker-check.done { background: var(--verde); border-color: var(--verde); color: white; }
-.tracker-text { flex: 1; font-size: 13px; color: #333; line-height: 1.4; }
-.tracker-text.done { color: #ccc; text-decoration: line-through; }
-
-.tip-box { background: var(--dorado-claro); border-radius: 12px; padding: 12px 14px; margin-top: 14px; border: 1px solid #e8c87a; }
-.tip-title { font-size: 11px; font-weight: 700; color: var(--dorado); margin-bottom: 4px; }
-.tip-text { font-size: 12px; color: #888; line-height: 1.5; }
-.tip-ref { font-size: 10px; color: var(--dorado-medio); margin-top: 4px; font-style: italic; }
-
-/* ── CALCULADORAS ── */
-.tab-calc-row { display: flex; gap: 6px; margin-bottom: 14px; }
-.tab-calc-btn { flex: 1; padding: 9px 4px; font-size: 11px; font-weight: 700; border-radius: 10px; cursor: pointer; text-align: center; border: 1px solid #e0e0e0; color: #aaa; background: white; }
-.tab-calc-btn.active { background: var(--verde-claro); color: var(--verde-oscuro); border-color: var(--verde); }
-.calc-label { font-size: 11px; color: #999; margin-bottom: 5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
-.calc-row { display: flex; align-items: center; gap: 6px; margin-bottom: 14px; }
-.calc-prefix { font-size: 16px; color: #bbb; font-weight: 700; }
-.calc-row input { flex: 1; font-size: 16px; padding: 10px 12px; border: 1.5px solid #e0e0e0; border-radius: 10px; font-family: Arial, sans-serif; outline: none; }
-.calc-row input:focus { border-color: var(--verde); }
-.result-card { border-radius: 12px; padding: 13px; margin-bottom: 10px; }
-.vc { background: var(--verde-claro); border: 1px solid #b3e5d4; }
-.dc { background: var(--dorado-claro); border: 1px solid #e8c87a; }
-.r-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
-.vc .r-label { color: var(--verde-oscuro); }
-.dc .r-label { color: var(--dorado); }
-.r-value { font-family: Georgia, serif; font-size: 22px; font-weight: 700; }
-.vc .r-value { color: var(--verde-oscuro); }
-.dc .r-value { color: var(--dorado); }
-.r-sub { font-size: 10px; margin-top: 2px; }
-.vc .r-sub { color: var(--verde); }
-.dc .r-sub { color: var(--dorado-medio); }
-.ph-box { text-align: center; padding: 32px 0; color: #ccc; font-size: 12px; }
-.ph-box span { display: block; font-size: 40px; margin-bottom: 10px; }
-.meses-row { display: flex; gap: 6px; margin-bottom: 14px; }
-.mes-btn { flex: 1; padding: 9px 2px; font-size: 11px; font-weight: 700; border-radius: 9px; cursor: pointer; text-align: center; border: 1px solid #e0e0e0; color: #aaa; background: white; }
-.mes-btn.active { background: var(--verde-claro); color: var(--verde-oscuro); border-color: var(--verde); }
-
-/* ── METAS ── */
-.meta-card { background: white; border: 1px solid #eee; border-radius: 12px; padding: 13px; margin-bottom: 10px; }
-.meta-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
-.meta-name { font-size: 13px; font-weight: 700; color: #333; }
-.meta-tipo { font-size: 10px; color: #bbb; margin-top: 2px; }
-.meta-pct { font-family: Georgia, serif; font-size: 16px; font-weight: 700; }
-.meta-amounts { display: flex; justify-content: space-between; font-size: 10px; color: #aaa; margin-top: 6px; }
-.meta-actions { display: flex; gap: 7px; margin-top: 11px; }
-.btn-meta-edit { flex: 1; padding: 8px; font-size: 12px; background: var(--verde-claro); color: var(--verde-oscuro); border: 1px solid #b3e5d4; border-radius: 8px; cursor: pointer; font-weight: 700; }
-.btn-meta-del { flex: 1; padding: 8px; font-size: 12px; background: #FEECEC; color: #C0392B; border: 1px solid #f5c0c0; border-radius: 8px; cursor: pointer; font-weight: 700; }
-
-.meta-add-card { border: 1.5px dashed #ccc; border-radius: 12px; padding: 14px; text-align: center; cursor: pointer; margin-bottom: 10px; }
-.meta-add-card:active { border-color: var(--verde); background: var(--verde-claro); }
-.meta-add-icon { font-size: 24px; color: #ccc; margin-bottom: 3px; }
-.meta-add-text { font-size: 12px; color: #bbb; }
-
-.smart-box { background: var(--verde-claro); border-radius: 12px; padding: 12px 14px; margin-top: 10px; border: 1px solid #b3e5d4; }
-.smart-title { font-size: 11px; font-weight: 700; color: var(--verde-oscuro); margin-bottom: 3px; }
-.smart-text { font-size: 11px; color: #888; }
-.smart-ref { font-size: 10px; color: var(--verde); margin-top: 4px; font-style: italic; }
-
-/* ── BOTTOM ── */
-.bottom-cta { background: white; border-top: 1px solid #eee; padding: 12px 14px; flex-shrink: 0; }
-.btn-wsp { width: 100%; padding: 13px; background: #25D366; color: white; border: none; border-radius: 12px; font-size: 14px; font-family: Georgia, serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
-.btn-wsp:active { background: #1DA851; }
-
-/* ── MODAL ── */
-.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 200; align-items: flex-end; justify-content: center; }
-.modal-overlay.active { display: flex; }
-.modal-box { background: white; border-radius: 24px 24px 0 0; padding: 22px 20px 32px; width: 100%; max-width: 430px; border-top: 4px solid var(--dorado-medio); }
-.modal-title { font-family: Georgia, serif; font-size: 17px; color: var(--verde-fondo); margin-bottom: 4px; }
-.modal-sub { font-size: 11px; color: #aaa; margin-bottom: 16px; }
-.modal-label { font-size: 11px; color: #777; font-weight: 700; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.3px; }
-.modal-input { width: 100%; padding: 11px 13px; border: 1.5px solid #e0e0e0; border-radius: 10px; font-size: 15px; font-family: Arial, sans-serif; margin-bottom: 13px; outline: none; }
-.modal-input:focus { border-color: var(--verde); }
-.modal-select { width: 100%; padding: 11px 13px; border: 1.5px solid #e0e0e0; border-radius: 10px; font-size: 15px; font-family: Arial, sans-serif; margin-bottom: 13px; outline: none; background: white; }
-.btn-modal-ok { width: 100%; padding: 13px; background: var(--verde-fondo); color: var(--dorado-brillante); border: none; border-radius: 10px; font-size: 14px; font-family: Georgia, serif; cursor: pointer; margin-bottom: 8px; }
-.btn-modal-cancel { width: 100%; padding: 11px; background: #f5f5f5; color: #aaa; border: none; border-radius: 10px; font-size: 13px; cursor: pointer; }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--verde:#1D9E75;--verde-claro:#E1F5EE;--verde-oscuro:#0F6E56;--verde-fondo:#1A3C34;--dorado:#BA7517;--dorado-claro:#FAEEDA;--dorado-medio:#C9963A;--dorado-brillante:#D4AF5A}
+html{height:100%}
+body{height:100%;font-family:Arial,sans-serif;background:var(--verde-fondo);overflow:hidden}
+.app{max-width:430px;margin:0 auto;height:100vh;height:100dvh;display:flex;flex-direction:column;background:#fafafa;overflow:hidden}
+.screen{display:none;flex-direction:column;height:100%}
+.screen.active{display:flex}
+.qr-bg{background:var(--verde-fondo);flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 18px;overflow-y:auto}
+.logo-wrap{width:200px;height:145px;margin:0 auto 12px;border-radius:14px;overflow:hidden;border:2px solid var(--dorado-medio);background:var(--verde-fondo)}
+.logo-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.logo-titulo{font-family:Georgia,serif;font-size:16px;color:var(--dorado-brillante);text-align:center;margin-bottom:2px}
+.logo-sub{font-size:10px;color:#9FD4BE;text-align:center;letter-spacing:2px;text-transform:uppercase;margin-bottom:18px}
+.register-card{background:white;border-radius:20px;padding:20px 18px;width:100%;border-top:4px solid var(--dorado-medio)}
+.reg-titulo{font-family:Georgia,serif;font-size:16px;color:var(--verde-fondo);text-align:center;margin-bottom:4px}
+.reg-sub{font-size:11px;color:#999;text-align:center;margin-bottom:14px;line-height:1.5}
+.field-label{font-size:11px;color:#777;font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.field-input{width:100%;padding:12px 13px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:15px;font-family:Arial,sans-serif;margin-bottom:12px;outline:none;-webkit-appearance:none}
+.field-input:focus{border-color:var(--verde)}
+.btn-acceder{width:100%;padding:14px;background:var(--verde-fondo);color:var(--dorado-brillante);border:none;border-radius:12px;font-size:15px;font-family:Georgia,serif;cursor:pointer;-webkit-appearance:none}
+.btn-acceder:active{background:var(--verde-oscuro)}
+.error-box{background:#FEECEC;border:1px solid #f5c0c0;border-radius:10px;padding:10px 13px;margin-top:10px;font-size:12px;color:#C0392B;text-align:center;display:none;line-height:1.5}
+.codigo-info{text-align:center;margin-top:12px;font-size:11px;color:#9FD4BE;line-height:1.6}
+.loading-screen{background:var(--verde-fondo);flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.loader{width:44px;height:44px;border-radius:50%;border:4px solid rgba(212,175,90,.3);border-top-color:var(--dorado-brillante);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{color:var(--dorado-brillante);font-family:Georgia,serif;font-size:14px}
+.app-header{background:var(--verde-fondo);padding:10px 14px 8px;border-bottom:2px solid var(--dorado-medio);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.header-logo{width:58px;height:42px;border-radius:8px;overflow:hidden;border:1px solid var(--dorado-medio);flex-shrink:0;background:var(--verde-fondo)}
+.header-logo img{width:100%;height:100%;object-fit:cover;display:block}
+.header-texts{flex:1}
+.header-brand{font-family:Georgia,serif;font-size:13px;color:var(--dorado-brillante)}
+.header-sub{font-size:9px;color:#9FD4BE;letter-spacing:1.5px;text-transform:uppercase}
+.header-saludo{font-size:12px;color:#7FC4A8;margin-top:1px}
+.nav-tabs{display:flex;background:white;border-bottom:1px solid #eee;flex-shrink:0}
+.nav-tab{flex:1;padding:8px 2px 6px;font-size:10px;color:#aaa;text-align:center;cursor:pointer;border-bottom:2px solid transparent;user-select:none}
+.nav-tab.active{color:var(--verde);border-bottom-color:var(--verde);font-weight:700}
+.nav-tab-icon{display:block;font-size:18px;margin-bottom:1px}
+.content{flex:1;overflow-y:auto;padding:14px;-webkit-overflow-scrolling:touch}
+.greeting-card{background:linear-gradient(135deg,var(--verde-fondo),var(--verde-oscuro));border-radius:14px;padding:14px 16px;margin-bottom:12px;border:1px solid var(--dorado-medio)}
+.greeting-title{font-family:Georgia,serif;font-size:15px;color:var(--dorado-brillante)}
+.greeting-book{font-size:11px;color:#9FD4BE;margin-top:3px}
+.streak-badge{display:inline-flex;align-items:center;gap:3px;background:var(--dorado-claro);color:var(--dorado);font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;margin-top:8px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px}
+.stat-card{background:white;border:1px solid #eee;border-radius:12px;padding:11px}
+.stat-label{font-size:10px;color:#aaa;margin-bottom:3px}
+.stat-value{font-family:Georgia,serif;font-size:20px;font-weight:700;color:var(--verde)}
+.stat-value.dorado{color:var(--dorado)}
+.stat-unit{font-size:10px;color:#ccc}
+.progress-bar{background:#f0f0f0;border-radius:4px;height:5px;margin-top:5px;overflow:hidden}
+.progress-fill{height:100%;border-radius:4px;background:var(--verde);transition:width .3s}
+.progress-fill.dorado{background:var(--dorado-medio)}
+.section-title{font-family:Georgia,serif;font-size:13px;color:#333;margin-bottom:9px;font-weight:700}
+.quick-card{background:white;border:1px solid #eee;border-radius:12px;padding:12px 13px;display:flex;align-items:center;gap:11px;cursor:pointer;margin-bottom:9px}
+.quick-card:active{background:#f5f5f5}
+.quick-icon{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.quick-icon.verde{background:var(--verde-claro)}
+.quick-icon.dorado{background:var(--dorado-claro)}
+.quick-name{font-size:13px;font-weight:700;color:#333}
+.quick-desc{font-size:11px;color:#aaa;margin-top:1px}
+.db-badge{background:var(--verde-claro);border-radius:8px;padding:8px 12px;margin-top:10px;font-size:11px;color:var(--verde-oscuro);text-align:center;border:1px solid #b3e5d4}
+.tracker-row{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid #f5f5f5}
+.tracker-row:last-child{border-bottom:none}
+.tracker-check{width:28px;height:28px;border-radius:50%;border:2px solid #ddd;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:14px;transition:all .2s}
+.tracker-check.done{background:var(--verde);border-color:var(--verde);color:white}
+.tracker-text{flex:1;font-size:13px;color:#333;line-height:1.4}
+.tracker-text.done{color:#ccc;text-decoration:line-through}
+.tip-box{background:var(--dorado-claro);border-radius:12px;padding:12px 14px;margin-top:14px;border:1px solid #e8c87a}
+.tip-title{font-size:11px;font-weight:700;color:var(--dorado);margin-bottom:4px}
+.tip-text{font-size:12px;color:#888;line-height:1.5}
+.tip-ref{font-size:10px;color:var(--dorado-medio);margin-top:4px;font-style:italic}
+.tab-calc-row{display:flex;gap:6px;margin-bottom:14px}
+.tab-calc-btn{flex:1;padding:9px 4px;font-size:11px;font-weight:700;border-radius:10px;cursor:pointer;text-align:center;border:1px solid #e0e0e0;color:#aaa;background:white}
+.tab-calc-btn.active{background:var(--verde-claro);color:var(--verde-oscuro);border-color:var(--verde)}
+.calc-label{font-size:11px;color:#999;margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.calc-row{display:flex;align-items:center;gap:6px;margin-bottom:14px}
+.calc-prefix{font-size:16px;color:#bbb;font-weight:700}
+.calc-row input{flex:1;font-size:16px;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:Arial,sans-serif;outline:none;-webkit-appearance:none}
+.calc-row input:focus{border-color:var(--verde)}
+.result-card{border-radius:12px;padding:13px;margin-bottom:10px}
+.vc{background:var(--verde-claro);border:1px solid #b3e5d4}
+.dc{background:var(--dorado-claro);border:1px solid #e8c87a}
+.r-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.vc .r-label{color:var(--verde-oscuro)}
+.dc .r-label{color:var(--dorado)}
+.r-value{font-family:Georgia,serif;font-size:22px;font-weight:700}
+.vc .r-value{color:var(--verde-oscuro)}
+.dc .r-value{color:var(--dorado)}
+.r-sub{font-size:10px;margin-top:2px}
+.vc .r-sub{color:var(--verde)}
+.dc .r-sub{color:var(--dorado-medio)}
+.ph-box{text-align:center;padding:32px 0;color:#ccc;font-size:12px}
+.ph-box span{display:block;font-size:40px;margin-bottom:10px}
+.meses-row{display:flex;gap:6px;margin-bottom:14px}
+.mes-btn{flex:1;padding:9px 2px;font-size:11px;font-weight:700;border-radius:9px;cursor:pointer;text-align:center;border:1px solid #e0e0e0;color:#aaa;background:white}
+.mes-btn.active{background:var(--verde-claro);color:var(--verde-oscuro);border-color:var(--verde)}
+.meta-card{background:white;border:1px solid #eee;border-radius:12px;padding:13px;margin-bottom:10px}
+.meta-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.meta-name{font-size:13px;font-weight:700;color:#333}
+.meta-tipo{font-size:10px;color:#bbb;margin-top:2px}
+.meta-pct{font-family:Georgia,serif;font-size:16px;font-weight:700}
+.meta-amounts{display:flex;justify-content:space-between;font-size:10px;color:#aaa;margin-top:6px}
+.meta-actions{display:flex;gap:7px;margin-top:11px}
+.btn-meta-edit{flex:1;padding:8px;font-size:12px;background:var(--verde-claro);color:var(--verde-oscuro);border:1px solid #b3e5d4;border-radius:8px;cursor:pointer;font-weight:700}
+.btn-meta-del{flex:1;padding:8px;font-size:12px;background:#FEECEC;color:#C0392B;border:1px solid #f5c0c0;border-radius:8px;cursor:pointer;font-weight:700}
+.meta-add-card{border:1.5px dashed #ccc;border-radius:12px;padding:14px;text-align:center;cursor:pointer;margin-bottom:10px}
+.meta-add-card:active{border-color:var(--verde);background:var(--verde-claro)}
+.meta-add-icon{font-size:24px;color:#ccc;margin-bottom:3px}
+.meta-add-text{font-size:12px;color:#bbb}
+.smart-box{background:var(--verde-claro);border-radius:12px;padding:12px 14px;margin-top:10px;border:1px solid #b3e5d4}
+.smart-title{font-size:11px;font-weight:700;color:var(--verde-oscuro);margin-bottom:3px}
+.smart-text{font-size:11px;color:#888}
+.smart-ref{font-size:10px;color:var(--verde);margin-top:4px;font-style:italic}
+.bottom-cta{background:white;border-top:1px solid #eee;padding:12px 14px;flex-shrink:0;padding-bottom:max(12px,env(safe-area-inset-bottom))}
+.btn-wsp{width:100%;padding:14px;background:#25D366;color:white;border:none;border-radius:12px;font-size:14px;font-family:Georgia,serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;-webkit-appearance:none}
+.btn-wsp:active{background:#1DA851}
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:200;align-items:flex-end;justify-content:center}
+.modal-overlay.active{display:flex}
+.modal-box{background:white;border-radius:24px 24px 0 0;padding:22px 20px 32px;width:100%;max-width:430px;border-top:4px solid var(--dorado-medio)}
+.modal-title{font-family:Georgia,serif;font-size:17px;color:var(--verde-fondo);margin-bottom:4px}
+.modal-sub{font-size:11px;color:#aaa;margin-bottom:16px}
+.modal-label{font-size:11px;color:#777;font-weight:700;margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px}
+.modal-input{width:100%;padding:11px 13px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:15px;font-family:Arial,sans-serif;margin-bottom:13px;outline:none;-webkit-appearance:none}
+.modal-input:focus{border-color:var(--verde)}
+.modal-select{width:100%;padding:11px 13px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:15px;font-family:Arial,sans-serif;margin-bottom:13px;outline:none;background:white}
+.btn-modal-ok{width:100%;padding:13px;background:var(--verde-fondo);color:var(--dorado-brillante);border:none;border-radius:10px;font-size:14px;font-family:Georgia,serif;cursor:pointer;margin-bottom:8px}
+.btn-modal-cancel{width:100%;padding:11px;background:#f5f5f5;color:#aaa;border:none;border-radius:10px;font-size:13px;cursor:pointer}
 </style>
 </head>
 <body>
 <div class="app">
 
-  <!-- LOADING -->
-  <div class="screen active" id="screen-loading">
-    <div class="loading-screen">
-      <div class="loader"></div>
-      <div class="loading-text">Cargando tu app...</div>
-    </div>
-  </div>
+<div class="screen active" id="screen-loading">
+  <div class="loading-screen"><div class="loader"></div><div class="loading-text">Cargando...</div></div>
+</div>
 
-  <!-- REGISTRO -->
-  <div class="screen" id="screen-registro">
-    <div class="qr-bg">
-      <div class="logo-wrap">
-        <img src="/logo.png" alt="Anabella Vanesa Finanzas con Propósito">
-      </div>
-      <div class="logo-titulo">Anabella Vanesa</div>
-      <div class="logo-sub">Finanzas con Propósito</div>
-      <div class="register-card">
-        <div class="reg-titulo">🔑 Activá tu acceso</div>
-        <div class="reg-sub">Escaneá el QR de tu libro o ingresá el código para desbloquear la app</div>
-        <div class="field-label">Código del libro</div>
-        <input class="field-input" id="codigo-input" placeholder="Ej: AV-2025-XXXX" maxlength="12" autocomplete="off" oninput="this.value=this.value.toUpperCase()">
-        <div class="field-label">Tu nombre</div>
-        <input class="field-input" id="reg-nombre" placeholder="Ej: María" autocomplete="name">
-        <div class="field-label">Tu email</div>
-        <input class="field-input" id="reg-email" type="email" placeholder="tucorreo@email.com" autocomplete="email">
-        <button class="btn-acceder" onclick="validarRegistro()">Activar mi acceso →</button>
-        <div class="error-box" id="error-qr"></div>
-        <div class="codigo-info">📖 El código QR está en las primeras páginas de tu libro.<br>Cada código es de uso único y personal.</div>
-      </div>
+<div class="screen" id="screen-registro">
+  <div class="qr-bg">
+    <div class="logo-wrap"><img src="logo.png" alt="Anabella Vanesa"></div>
+    <div class="logo-titulo">Anabella Vanesa</div>
+    <div class="logo-sub">Finanzas con Propósito</div>
+    <div class="register-card">
+      <div class="reg-titulo">🔑 Activá tu acceso</div>
+      <div class="reg-sub">Ingresá el código de tu libro para desbloquear la app</div>
+      <div class="field-label">Código del libro</div>
+      <input class="field-input" id="codigo-input" placeholder="Ej: AV-2025-XXXX" maxlength="12" autocomplete="off" oninput="this.value=this.value.toUpperCase()">
+      <div class="field-label">Tu nombre</div>
+      <input class="field-input" id="reg-nombre" placeholder="Ej: María" autocomplete="name">
+      <div class="field-label">Tu email</div>
+      <input class="field-input" id="reg-email" type="email" placeholder="tucorreo@email.com" autocomplete="email">
+      <button class="btn-acceder" onclick="validarRegistro()">Activar mi acceso →</button>
+      <div class="error-box" id="error-qr"></div>
+      <div class="codigo-info">📖 El código QR está en las primeras páginas de tu libro. Cada código es de uso único y personal.</div>
     </div>
   </div>
+</div>
 
-  <!-- INICIO -->
-  <div class="screen" id="screen-inicio">
-    <div class="app-header">
-      <div class="header-logo"><img src="/logo.png" alt="AV"></div>
-      <div class="header-texts">
-        <div class="header-brand">Anabella Vanesa</div>
-        <div class="header-sub">Finanzas con Propósito</div>
-        <div class="header-saludo" id="saludo-header">Hola 👋</div>
-      </div>
+<div class="screen" id="screen-inicio">
+  <div class="app-header">
+    <div class="header-logo"><img src="logo.png" alt="AV"></div>
+    <div class="header-texts">
+      <div class="header-brand">Anabella Vanesa</div>
+      <div class="header-sub">Finanzas con Propósito</div>
+      <div class="header-saludo" id="saludo-header">Hola 👋</div>
     </div>
-    <div class="nav-tabs">
-      <div class="nav-tab active" onclick="switchTab('inicio')"><span class="nav-tab-icon">🏠</span>Inicio</div>
-      <div class="nav-tab" onclick="switchTab('habitos')"><span class="nav-tab-icon">✅</span>Hábitos</div>
-      <div class="nav-tab" onclick="switchTab('calc')"><span class="nav-tab-icon">🧮</span>Calcular</div>
-      <div class="nav-tab" onclick="switchTab('metas')"><span class="nav-tab-icon">🎯</span>Metas</div>
-    </div>
-    <div class="content">
-      <div class="greeting-card">
-        <div class="greeting-title" id="greeting-title">¡Construí tu futuro financiero!</div>
-        <div class="greeting-book">7 Hábitos de las Personas Ahorrativas</div>
-        <div><span class="streak-badge">🔥 7 días de racha</span></div>
-      </div>
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">Ahorrado este mes</div>
-          <div class="stat-value">$24.500</div>
-          <div class="stat-unit">de $40.000 meta</div>
-          <div class="progress-bar"><div class="progress-fill" style="width:61%"></div></div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Hábitos hoy</div>
-          <div class="stat-value dorado" id="contador-habitos">0/5</div>
-          <div class="stat-unit">completados</div>
-          <div class="progress-bar"><div class="progress-fill dorado" id="barra-habitos" style="width:0%"></div></div>
-        </div>
-      </div>
-      <div class="section-title">Accesos rápidos</div>
-      <div class="quick-card" onclick="switchTab('calc')">
-        <div class="quick-icon verde">🧮</div>
-        <div><div class="quick-name">Calculadoras financieras</div><div class="quick-desc">50/30/20 · Fondo de emergencia</div></div>
-        <span style="color:#ddd;margin-left:auto;font-size:18px">›</span>
-      </div>
-      <div class="quick-card" onclick="switchTab('metas')">
-        <div class="quick-icon dorado">🎯</div>
-        <div><div class="quick-name">Mis metas SMART</div><div class="quick-desc">Corto · Mediano · Largo plazo</div></div>
-        <span style="color:#ddd;margin-left:auto;font-size:18px">›</span>
-      </div>
-      <div class="db-badge">✅ Acceso activado · Registrado en base de datos</div>
-    </div>
-    <div class="bottom-cta"><button class="btn-wsp" onclick="irWhatsApp()"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.554 4.103 1.523 5.824L.057 23.5l5.835-1.53A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.371l-.36-.214-3.732.979.997-3.645-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>Agendar sesión con Anabella</button></div>
   </div>
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="switchTab('inicio')"><span class="nav-tab-icon">🏠</span>Inicio</div>
+    <div class="nav-tab" onclick="switchTab('habitos')"><span class="nav-tab-icon">✅</span>Hábitos</div>
+    <div class="nav-tab" onclick="switchTab('calc')"><span class="nav-tab-icon">🧮</span>Calcular</div>
+    <div class="nav-tab" onclick="switchTab('metas')"><span class="nav-tab-icon">🎯</span>Metas</div>
+  </div>
+  <div class="content">
+    <div class="greeting-card">
+      <div class="greeting-title" id="greeting-title">¡Construí tu futuro financiero!</div>
+      <div class="greeting-book">7 Hábitos de las Personas Ahorrativas</div>
+      <div><span class="streak-badge" id="streak-badge">🔥 Día 1</span></div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">Metas activas</div><div class="stat-value" id="stat-metas">0</div><div class="stat-unit">en seguimiento</div></div>
+      <div class="stat-card"><div class="stat-label">Hábitos hoy</div><div class="stat-value dorado" id="contador-habitos">0/7</div><div class="stat-unit">completados</div><div class="progress-bar"><div class="progress-fill dorado" id="barra-habitos" style="width:0%"></div></div></div>
+    </div>
+    <div class="section-title">Accesos rápidos</div>
+    <div class="quick-card" onclick="switchTab('calc')"><div class="quick-icon verde">🧮</div><div><div class="quick-name">Calculadoras financieras</div><div class="quick-desc">50/30/20 · Fondo de emergencia</div></div><span style="color:#ddd;margin-left:auto;font-size:20px">›</span></div>
+    <div class="quick-card" onclick="switchTab('metas')"><div class="quick-icon dorado">🎯</div><div><div class="quick-name">Mis metas SMART</div><div class="quick-desc">Corto · Mediano · Largo plazo</div></div><span style="color:#ddd;margin-left:auto;font-size:20px">›</span></div>
+    <div class="db-badge">✅ Acceso activado · Registrado en base de datos</div>
+  </div>
+  <div class="bottom-cta"><button class="btn-wsp" onclick="irWhatsApp()"><svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.554 4.103 1.523 5.824L.057 23.5l5.835-1.53A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.371l-.36-.214-3.732.979.997-3.645-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>Agendar sesión con Anabella</button></div>
+</div>
 
-  <!-- HÁBITOS -->
-  <div class="screen" id="screen-habitos">
-    <div class="app-header">
-      <div class="header-logo"><img src="/logo.png" alt="AV"></div>
-      <div class="header-texts">
-        <div class="header-brand">Anabella Vanesa</div>
-        <div class="header-sub">Finanzas con Propósito</div>
-        <div class="header-saludo">Checklist diario</div>
-      </div>
-    </div>
-    <div class="nav-tabs">
-      <div class="nav-tab" onclick="switchTab('inicio')"><span class="nav-tab-icon">🏠</span>Inicio</div>
-      <div class="nav-tab active" onclick="switchTab('habitos')"><span class="nav-tab-icon">✅</span>Hábitos</div>
-      <div class="nav-tab" onclick="switchTab('calc')"><span class="nav-tab-icon">🧮</span>Calcular</div>
-      <div class="nav-tab" onclick="switchTab('metas')"><span class="nav-tab-icon">🎯</span>Metas</div>
-    </div>
-    <div class="content">
-      <div class="section-title">Los 7 Hábitos · Checklist de hoy</div>
-      <div id="tracker-list">
-        <div class="tracker-row"><div class="tracker-check" onclick="toggleCheck(this)"></div><div class="tracker-text">Revisé mi presupuesto hoy</div></div>
-        <div class="tracker-row"><div class="tracker-check" onclick="toggleCheck(this)"></div><div class="tracker-text">Evité una compra impulsiva</div></div>
-        <div class="tracker-row"><div class="tracker-check" onclick="toggleCheck(this)"></div><div class="tracker-text">Comparé precios antes de comprar</div></div>
-        <div class="tracker-row"><div class="tracker-check" onclick="toggleCheck(this)"></div><div class="tracker-text">Transferí mi ahorro automático</div></div>
-        <div class="tracker-row"><div class="tracker-check" onclick="toggleCheck(this)"></div><div class="tracker-text">Reflexioné sobre mis gastos del día</div></div>
-      </div>
-      <div class="tip-box">
-        <div class="tip-title">💡 Consejo del día</div>
-        <div class="tip-text">Esperá 24 horas antes de cualquier compra no planificada. La satisfacción de no gastar dura más que la del objeto comprado.</div>
-        <div class="tip-ref">— Capítulo 6 del libro</div>
-      </div>
-    </div>
-    <div class="bottom-cta"><button class="btn-wsp" onclick="irWhatsApp()"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.554 4.103 1.523 5.824L.057 23.5l5.835-1.53A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.371l-.36-.214-3.732.979.997-3.645-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>Agendar sesión con Anabella</button></div>
+<div class="screen" id="screen-habitos">
+  <div class="app-header">
+    <div class="header-logo"><img src="logo.png" alt="AV"></div>
+    <div class="header-texts"><div class="header-brand">Anabella Vanesa</div><div class="header-sub">Finanzas con Propósito</div><div class="header-saludo">Checklist diario</div></div>
   </div>
+  <div class="nav-tabs">
+    <div class="nav-tab" onclick="switchTab('inicio')"><span class="nav-tab-icon">🏠</span>Inicio</div>
+    <div class="nav-tab active" onclick="switchTab('habitos')"><span class="nav-tab-icon">✅</span>Hábitos</div>
+    <div class="nav-tab" onclick="switchTab('calc')"><span class="nav-tab-icon">🧮</span>Calcular</div>
+    <div class="nav-tab" onclick="switchTab('metas')"><span class="nav-tab-icon">🎯</span>Metas</div>
+  </div>
+  <div class="content">
+    <div class="section-title">Los 7 Hábitos · Checklist de hoy</div>
+    <div id="tracker-list">
+      <div class="tracker-row"><div class="tracker-check" onclick="toggleCheck(this)"></div><div class="tracker-text">Revisé mi presupuesto hoy</div></div>
+      <div class="tracker-row"><div class="tracker-check" onclick="toggleCheck(this)"></div><div class="tracker-text">Evité una compra impulsiva</div></div>
+      <div class="tracker-row"><div class="tracker-check" onclick="toggleCheck(this)"></div><div class="tracker-text">Comparé precios antes de comprar</div></div>
+      <div class="tracker-row"><div class="tracker-check" onclick="toggleCheck(this)"></div><div class="tracker-text">Transferí mi ahorro automático</div></div>
+      <div class="tracker-row"><div class="tracker-check" onclick="toggleCheck(this)"></div><div class="tracker-text">Reflexioné sobre mis gastos del día</div></div>
+      <div class="tracker-row"><div class="tracker-check" onclick="toggleCheck(this)"></div><div class="tracker-text">Leí o escuché sobre finanzas</div></div>
+      <div class="tracker-row"><div class="tracker-check" onclick="toggleCheck(this)"></div><div class="tracker-text">Conecté con mi comunidad de ahorro</div></div>
+    </div>
+    <div class="tip-box"><div class="tip-title">💡 Consejo del día</div><div class="tip-text">Esperá 24 horas antes de cualquier compra no planificada. La satisfacción de no gastar dura más que la del objeto comprado.</div><div class="tip-ref">— Capítulo 6 del libro</div></div>
+  </div>
+  <div class="bottom-cta"><button class="btn-wsp" onclick="irWhatsApp()"><svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.554 4.103 1.523 5.824L.057 23.5l5.835-1.53A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.371l-.36-.214-3.732.979.997-3.645-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>Agendar sesión con Anabella</button></div>
+</div>
 
-  <!-- CALCULAR -->
-  <div class="screen" id="screen-calc">
-    <div class="app-header">
-      <div class="header-logo"><img src="/logo.png" alt="AV"></div>
-      <div class="header-texts">
-        <div class="header-brand">Anabella Vanesa</div>
-        <div class="header-sub">Finanzas con Propósito</div>
-        <div class="header-saludo">Calculadoras del libro</div>
-      </div>
-    </div>
-    <div class="nav-tabs">
-      <div class="nav-tab" onclick="switchTab('inicio')"><span class="nav-tab-icon">🏠</span>Inicio</div>
-      <div class="nav-tab" onclick="switchTab('habitos')"><span class="nav-tab-icon">✅</span>Hábitos</div>
-      <div class="nav-tab active" onclick="switchTab('calc')"><span class="nav-tab-icon">🧮</span>Calcular</div>
-      <div class="nav-tab" onclick="switchTab('metas')"><span class="nav-tab-icon">🎯</span>Metas</div>
-    </div>
-    <div class="content">
-      <div class="tab-calc-row">
-        <div class="tab-calc-btn active" id="tab-5030" onclick="switchCalc('5030')">Regla 50/30/20</div>
-        <div class="tab-calc-btn" id="tab-emerg" onclick="switchCalc('emerg')">Fondo emergencia</div>
-      </div>
-      <div id="calc-5030">
-        <div class="calc-label">Ingreso neto mensual</div>
-        <div class="calc-row"><span class="calc-prefix">$</span><input type="number" id="ingreso" placeholder="Ej: 500000" oninput="calcular5030()" inputmode="numeric"></div>
-        <div id="res5030" style="display:none">
-          <div class="result-card vc"><div class="r-label">50% — Necesidades</div><div class="r-value" id="r-nec"></div><div class="r-sub">Alquiler · comida · servicios · transporte</div><div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:50%"></div></div></div>
-          <div class="result-card dc"><div class="r-label">30% — Deseos</div><div class="r-value" id="r-des"></div><div class="r-sub">Salidas · ropa · entretenimiento</div><div class="progress-bar" style="margin-top:8px"><div class="progress-fill dorado" style="width:30%"></div></div></div>
-          <div class="result-card vc"><div class="r-label">20% — Ahorro e inversión</div><div class="r-value" id="r-aho"></div><div class="r-sub">Fondo de emergencia + inversiones</div><div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:20%"></div></div></div>
-        </div>
-        <div id="ph-5030" class="ph-box"><span>🧮</span>Ingresá tu ingreso neto</div>
-      </div>
-      <div id="calc-emerg" style="display:none">
-        <div class="calc-label">Gastos esenciales mensuales</div>
-        <div class="calc-row"><span class="calc-prefix">$</span><input type="number" id="gastos-mes" placeholder="Ej: 200000" oninput="calcEmerg()" inputmode="numeric"></div>
-        <div class="calc-label">Meses de cobertura</div>
-        <div class="meses-row">
-          <button class="mes-btn active" id="m3" onclick="setMeses(3)">3 meses</button>
-          <button class="mes-btn" id="m4" onclick="setMeses(4)">4 meses</button>
-          <button class="mes-btn" id="m6" onclick="setMeses(6)">6 meses</button>
-        </div>
-        <div id="res-emerg" style="display:none">
-          <div class="result-card vc"><div class="r-label">Fondo de emergencia ideal</div><div class="r-value" id="r-fondo"></div><div class="r-sub" id="r-desc"></div></div>
-          <div class="result-card dc"><div class="r-label">Ahorro mensual sugerido (20%)</div><div class="r-value" id="r-cuota"></div><div class="r-sub" id="r-tiempo"></div></div>
-        </div>
-        <div id="ph-emerg" class="ph-box"><span>🛡️</span>Ingresá tus gastos mensuales</div>
-      </div>
-    </div>
-    <div class="bottom-cta"><button class="btn-wsp" onclick="irWhatsApp()"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.554 4.103 1.523 5.824L.057 23.5l5.835-1.53A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.371l-.36-.214-3.732.979.997-3.645-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>Trabajalo con Anabella</button></div>
+<div class="screen" id="screen-calc">
+  <div class="app-header">
+    <div class="header-logo"><img src="logo.png" alt="AV"></div>
+    <div class="header-texts"><div class="header-brand">Anabella Vanesa</div><div class="header-sub">Finanzas con Propósito</div><div class="header-saludo">Calculadoras del libro</div></div>
   </div>
+  <div class="nav-tabs">
+    <div class="nav-tab" onclick="switchTab('inicio')"><span class="nav-tab-icon">🏠</span>Inicio</div>
+    <div class="nav-tab" onclick="switchTab('habitos')"><span class="nav-tab-icon">✅</span>Hábitos</div>
+    <div class="nav-tab active" onclick="switchTab('calc')"><span class="nav-tab-icon">🧮</span>Calcular</div>
+    <div class="nav-tab" onclick="switchTab('metas')"><span class="nav-tab-icon">🎯</span>Metas</div>
+  </div>
+  <div class="content">
+    <div class="tab-calc-row"><div class="tab-calc-btn active" id="tab-5030" onclick="switchCalc('5030')">Regla 50/30/20</div><div class="tab-calc-btn" id="tab-emerg" onclick="switchCalc('emerg')">Fondo emergencia</div></div>
+    <div id="calc-5030">
+      <div class="calc-label">Ingreso neto mensual</div>
+      <div class="calc-row"><span class="calc-prefix">$</span><input type="number" id="ingreso" placeholder="Ej: 500000" oninput="calcular5030()" inputmode="numeric"></div>
+      <div id="res5030" style="display:none">
+        <div class="result-card vc"><div class="r-label">50% — Necesidades</div><div class="r-value" id="r-nec"></div><div class="r-sub">Alquiler · comida · servicios · transporte</div><div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:50%"></div></div></div>
+        <div class="result-card dc"><div class="r-label">30% — Deseos</div><div class="r-value" id="r-des"></div><div class="r-sub">Salidas · ropa · entretenimiento</div><div class="progress-bar" style="margin-top:8px"><div class="progress-fill dorado" style="width:30%"></div></div></div>
+        <div class="result-card vc"><div class="r-label">20% — Ahorro e inversión</div><div class="r-value" id="r-aho"></div><div class="r-sub">Fondo de emergencia + inversiones</div><div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:20%"></div></div></div>
+      </div>
+      <div id="ph-5030" class="ph-box"><span>🧮</span>Ingresá tu ingreso neto</div>
+    </div>
+    <div id="calc-emerg" style="display:none">
+      <div class="calc-label">Gastos esenciales mensuales</div>
+      <div class="calc-row"><span class="calc-prefix">$</span><input type="number" id="gastos-mes" placeholder="Ej: 200000" oninput="calcEmerg()" inputmode="numeric"></div>
+      <div class="calc-label">Meses de cobertura</div>
+      <div class="meses-row"><button class="mes-btn active" id="m3" onclick="setMeses(3)">3 meses</button><button class="mes-btn" id="m4" onclick="setMeses(4)">4 meses</button><button class="mes-btn" id="m6" onclick="setMeses(6)">6 meses</button></div>
+      <div id="res-emerg" style="display:none">
+        <div class="result-card vc"><div class="r-label">Fondo de emergencia ideal</div><div class="r-value" id="r-fondo"></div><div class="r-sub" id="r-desc"></div></div>
+        <div class="result-card dc"><div class="r-label">Ahorro mensual sugerido (20%)</div><div class="r-value" id="r-cuota"></div><div class="r-sub" id="r-tiempo"></div></div>
+      </div>
+      <div id="ph-emerg" class="ph-box"><span>🛡️</span>Ingresá tus gastos mensuales</div>
+    </div>
+  </div>
+  <div class="bottom-cta"><button class="btn-wsp" onclick="irWhatsApp()"><svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.554 4.103 1.523 5.824L.057 23.5l5.835-1.53A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.371l-.36-.214-3.732.979.997-3.645-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>Trabajalo con Anabella</button></div>
+</div>
 
-  <!-- METAS -->
-  <div class="screen" id="screen-metas">
-    <div class="app-header">
-      <div class="header-logo"><img src="/logo.png" alt="AV"></div>
-      <div class="header-texts">
-        <div class="header-brand">Anabella Vanesa</div>
-        <div class="header-sub">Finanzas con Propósito</div>
-        <div class="header-saludo">Mis Metas SMART</div>
-      </div>
-    </div>
-    <div class="nav-tabs">
-      <div class="nav-tab" onclick="switchTab('inicio')"><span class="nav-tab-icon">🏠</span>Inicio</div>
-      <div class="nav-tab" onclick="switchTab('habitos')"><span class="nav-tab-icon">✅</span>Hábitos</div>
-      <div class="nav-tab" onclick="switchTab('calc')"><span class="nav-tab-icon">🧮</span>Calcular</div>
-      <div class="nav-tab active" onclick="switchTab('metas')"><span class="nav-tab-icon">🎯</span>Metas</div>
-    </div>
-    <div class="content">
-      <div id="lista-metas"></div>
-      <div class="meta-add-card" onclick="abrirModal(null)">
-        <div class="meta-add-icon">＋</div>
-        <div class="meta-add-text">Agregar nueva meta SMART</div>
-      </div>
-      <div class="smart-box">
-        <div class="smart-title">📌 Método SMART</div>
-        <div class="smart-text">Específica · Medible · Alcanzable · Relevante · Con tiempo definido</div>
-        <div class="smart-ref">— Capítulo 1 del libro</div>
-      </div>
-    </div>
-    <div class="bottom-cta"><button class="btn-wsp" onclick="irWhatsApp()"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.554 4.103 1.523 5.824L.057 23.5l5.835-1.53A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.371l-.36-.214-3.732.979.997-3.645-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>Trabajá tus metas con Anabella</button></div>
+<div class="screen" id="screen-metas">
+  <div class="app-header">
+    <div class="header-logo"><img src="logo.png" alt="AV"></div>
+    <div class="header-texts"><div class="header-brand">Anabella Vanesa</div><div class="header-sub">Finanzas con Propósito</div><div class="header-saludo">Mis Metas SMART</div></div>
   </div>
+  <div class="nav-tabs">
+    <div class="nav-tab" onclick="switchTab('inicio')"><span class="nav-tab-icon">🏠</span>Inicio</div>
+    <div class="nav-tab" onclick="switchTab('habitos')"><span class="nav-tab-icon">✅</span>Hábitos</div>
+    <div class="nav-tab" onclick="switchTab('calc')"><span class="nav-tab-icon">🧮</span>Calcular</div>
+    <div class="nav-tab active" onclick="switchTab('metas')"><span class="nav-tab-icon">🎯</span>Metas</div>
+  </div>
+  <div class="content">
+    <div id="lista-metas"></div>
+    <div class="meta-add-card" onclick="abrirModal(null)"><div class="meta-add-icon">＋</div><div class="meta-add-text">Agregar nueva meta SMART</div></div>
+    <div class="smart-box"><div class="smart-title">📌 Método SMART</div><div class="smart-text">Específica · Medible · Alcanzable · Relevante · Con tiempo definido</div><div class="smart-ref">— Capítulo 1 del libro</div></div>
+  </div>
+  <div class="bottom-cta"><button class="btn-wsp" onclick="irWhatsApp()"><svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.554 4.103 1.523 5.824L.057 23.5l5.835-1.53A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.371l-.36-.214-3.732.979.997-3.645-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>Trabajá tus metas con Anabella</button></div>
+</div>
 
 </div>
 
-<!-- MODAL META -->
 <div class="modal-overlay" id="modal-meta">
   <div class="modal-box">
     <div class="modal-title" id="modal-titulo">🎯 Nueva Meta SMART</div>
@@ -493,22 +311,19 @@ html, body {
 </div>
 
 <script>
-const SUPABASE_URL = 'https://xwvhtwfumdfgfobqwjxz.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3dmh0d2Z1bWRmZ2ZvYnF3anh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2OTIwOTIsImV4cCI6MjA5NDI2ODA5Mn0.MJRgcE-ylXkaG9pIJitWGLYTPuHwedHyRj8_h-KDA9c';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL='https://xwvhtwfumdfgfobqwjxz.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3dmh0d2Z1bWRmZ2ZvYnF3anh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2OTIwOTIsImV4cCI6MjA5NDI2ODA5Mn0.MJRgcE-ylXkaG9pIJitWGLYTPuHwedHyRj8_h-KDA9c';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let usuarioNombre='',mesesEmerg=3,metas=[],editandoId=null,nextId=1;
 
-let usuarioNombre = '';
-let mesesEmerg = 3;
-let metas = [];
-let editandoId = null;
-let nextId = 1;
-
-// Verificar si ya registró antes
-window.addEventListener('load', () => {
-  const sesion = localStorage.getItem('av_sesion');
-  if (sesion) {
-    const datos = JSON.parse(sesion);
-    usuarioNombre = datos.nombre;
+window.addEventListener('load',()=>{
+  const params=new URLSearchParams(window.location.search);
+  const codigoQR=params.get('codigo');
+  if(codigoQR) document.getElementById('codigo-input').value=codigoQR.toUpperCase();
+  const sesion=localStorage.getItem('av_sesion');
+  if(sesion){
+    const datos=JSON.parse(sesion);
+    usuarioNombre=datos.nombre;
     aplicarSaludo(datos.nombre);
     renderMetas();
     actualizarContador();
@@ -518,221 +333,154 @@ window.addEventListener('load', () => {
   }
 });
 
-function switchScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('screen-' + id).classList.add('active');
+function switchScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('screen-'+id).classList.add('active');}
+function switchTab(tab){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+tab).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  const tabs=['inicio','habitos','calc','metas'];
+  const idx=tabs.indexOf(tab);
+  if(idx>=0) document.querySelectorAll('.nav-tab')[idx].classList.add('active');
 }
 
-function switchTab(tab) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('screen-' + tab).classList.add('active');
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  const tabs = ['inicio','habitos','calc','metas'];
-  const idx = tabs.indexOf(tab);
-  if (idx >= 0) document.querySelectorAll('.nav-tab')[idx].classList.add('active');
-}
-
-async function validarRegistro() {
-  const codigo = document.getElementById('codigo-input').value.trim().toUpperCase();
-  const nombre = document.getElementById('reg-nombre').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
-  const err = document.getElementById('error-qr');
-
-  if (!codigo || !nombre || !email) {
-    err.textContent = '⚠️ Completá todos los campos.'; err.style.display='block'; return;
-  }
-  if (!email.includes('@')) {
-    err.textContent = '⚠️ El email no parece válido.'; err.style.display='block'; return;
-  }
-
+async function validarRegistro(){
+  const codigo=document.getElementById('codigo-input').value.trim().toUpperCase();
+  const nombre=document.getElementById('reg-nombre').value.trim();
+  const email=document.getElementById('reg-email').value.trim();
+  const err=document.getElementById('error-qr');
+  if(!codigo||!nombre||!email){err.textContent='⚠️ Completá todos los campos.';err.style.display='block';return;}
+  if(!email.includes('@')){err.textContent='⚠️ El email no parece válido.';err.style.display='block';return;}
   switchScreen('loading');
-
-  try {
-    // Verificar código en Supabase
-    const { data: codData, error: codErr } = await sb
-      .from('codigos')
-      .select('*')
-      .eq('codigo', codigo)
-      .single();
-
-    if (codErr || !codData) {
-      switchScreen('registro');
-      err.textContent = '⚠️ Código no válido. Verificá que lo copiaste bien del libro.';
-      err.style.display = 'block'; return;
-    }
-    if (codData.usado) {
-      switchScreen('registro');
-      err.textContent = '🚫 Este código ya fue utilizado. Es de uso único y personal.';
-      err.style.display = 'block'; return;
-    }
-
-    // Marcar código como usado
-    await sb.from('codigos').update({ usado: true, fecha_uso: new Date().toISOString() }).eq('codigo', codigo);
-
-    // Guardar registro del lector
-    await sb.from('registros').insert([{ nombre, email, codigo, fecha: new Date().toISOString() }]);
-
-    // Guardar sesión local
-    localStorage.setItem('av_sesion', JSON.stringify({ nombre, email, codigo }));
-    usuarioNombre = nombre;
+  try{
+    const{data:codData,error:codErr}=await sb.from('codigos').select('*').eq('codigo',codigo).single();
+    if(codErr||!codData){switchScreen('registro');err.textContent='⚠️ Código no válido. Verificá que lo copiaste bien del libro.';err.style.display='block';return;}
+    if(codData.usado){switchScreen('registro');err.textContent='🚫 Este código ya fue utilizado. Es de uso único y personal.';err.style.display='block';return;}
+    await sb.from('codigos').update({usado:true,fecha_uso:new Date().toISOString()}).eq('codigo',codigo);
+    await sb.from('registros').insert([{nombre,email,codigo,fecha:new Date().toISOString()}]);
+    localStorage.setItem('av_sesion',JSON.stringify({nombre,email,codigo}));
+    usuarioNombre=nombre;
     aplicarSaludo(nombre);
     renderMetas();
     actualizarContador();
     switchTab('inicio');
-
-  } catch(e) {
+  }catch(e){
     switchScreen('registro');
-    err.textContent = '⚠️ Error de conexión. Revisá tu internet e intentá de nuevo.';
-    err.style.display = 'block';
+    err.textContent='⚠️ Error de conexión. Revisá tu internet e intentá de nuevo.';
+    err.style.display='block';
   }
 }
 
-function aplicarSaludo(nombre) {
-  document.getElementById('saludo-header').textContent = 'Hola, ' + nombre + ' 👋';
-  document.getElementById('greeting-title').textContent = '¡Bienvenid@, ' + nombre + '!';
+function aplicarSaludo(nombre){
+  document.getElementById('saludo-header').textContent='Hola, '+nombre+' 👋';
+  document.getElementById('greeting-title').textContent='¡Bienvenid@, '+nombre+'!';
 }
 
-function toggleCheck(el) {
-  const isDone = el.classList.toggle('done');
-  el.nextElementSibling.classList.toggle('done', isDone);
-  el.textContent = isDone ? '✓' : '';
+function toggleCheck(el){
+  const isDone=el.classList.toggle('done');
+  el.nextElementSibling.classList.toggle('done',isDone);
+  el.textContent=isDone?'✓':'';
   actualizarContador();
 }
 
-function actualizarContador() {
-  const total = document.querySelectorAll('#tracker-list .tracker-check').length;
-  const hechos = document.querySelectorAll('#tracker-list .tracker-check.done').length;
-  document.getElementById('contador-habitos').textContent = hechos + '/' + total;
-  document.getElementById('barra-habitos').style.width = Math.round((hechos/total)*100) + '%';
+function actualizarContador(){
+  const total=document.querySelectorAll('#tracker-list .tracker-check').length;
+  const hechos=document.querySelectorAll('#tracker-list .tracker-check.done').length;
+  document.getElementById('contador-habitos').textContent=hechos+'/'+total;
+  document.getElementById('barra-habitos').style.width=Math.round((hechos/total)*100)+'%';
+  if(hechos===total&&total>0) document.getElementById('streak-badge').textContent='🔥 ¡'+total+'/7 completados!';
 }
 
-function calcular5030() {
-  const val = parseFloat(document.getElementById('ingreso').value) || 0;
-  if (val > 0) {
-    document.getElementById('r-nec').textContent = '$' + Math.round(val*0.5).toLocaleString('es-AR');
-    document.getElementById('r-des').textContent = '$' + Math.round(val*0.3).toLocaleString('es-AR');
-    document.getElementById('r-aho').textContent = '$' + Math.round(val*0.2).toLocaleString('es-AR');
-    document.getElementById('res5030').style.display = 'block';
-    document.getElementById('ph-5030').style.display = 'none';
-  } else {
-    document.getElementById('res5030').style.display = 'none';
-    document.getElementById('ph-5030').style.display = 'block';
-  }
+function calcular5030(){
+  const val=parseFloat(document.getElementById('ingreso').value)||0;
+  if(val>0){
+    document.getElementById('r-nec').textContent='$'+Math.round(val*.5).toLocaleString('es-AR');
+    document.getElementById('r-des').textContent='$'+Math.round(val*.3).toLocaleString('es-AR');
+    document.getElementById('r-aho').textContent='$'+Math.round(val*.2).toLocaleString('es-AR');
+    document.getElementById('res5030').style.display='block';
+    document.getElementById('ph-5030').style.display='none';
+  }else{document.getElementById('res5030').style.display='none';document.getElementById('ph-5030').style.display='block';}
 }
 
-function switchCalc(tipo) {
-  document.getElementById('calc-5030').style.display = tipo==='5030'?'block':'none';
-  document.getElementById('calc-emerg').style.display = tipo==='emerg'?'block':'none';
-  document.getElementById('tab-5030').classList.toggle('active', tipo==='5030');
-  document.getElementById('tab-emerg').classList.toggle('active', tipo==='emerg');
+function switchCalc(tipo){
+  document.getElementById('calc-5030').style.display=tipo==='5030'?'block':'none';
+  document.getElementById('calc-emerg').style.display=tipo==='emerg'?'block':'none';
+  document.getElementById('tab-5030').classList.toggle('active',tipo==='5030');
+  document.getElementById('tab-emerg').classList.toggle('active',tipo==='emerg');
 }
 
-function setMeses(n) {
-  mesesEmerg = n;
-  ['m3','m4','m6'].forEach(id => document.getElementById(id).classList.remove('active'));
+function setMeses(n){
+  mesesEmerg=n;
+  ['m3','m4','m6'].forEach(id=>document.getElementById(id).classList.remove('active'));
   document.getElementById('m'+n).classList.add('active');
   calcEmerg();
 }
 
-function calcEmerg() {
-  const g = parseFloat(document.getElementById('gastos-mes').value) || 0;
-  if (g > 0) {
-    const fondo = g * mesesEmerg;
-    const cuota = Math.round(g * 0.2);
-    const meses = cuota > 0 ? Math.ceil(fondo/cuota) : 0;
-    document.getElementById('r-fondo').textContent = '$' + Math.round(fondo).toLocaleString('es-AR');
-    document.getElementById('r-desc').textContent = 'Para cubrir ' + mesesEmerg + ' meses de gastos esenciales';
-    document.getElementById('r-cuota').textContent = '$' + cuota.toLocaleString('es-AR') + ' / mes';
-    document.getElementById('r-tiempo').textContent = 'Lo alcanzás en aprox. ' + meses + ' meses ahorrando el 20%';
-    document.getElementById('res-emerg').style.display = 'block';
-    document.getElementById('ph-emerg').style.display = 'none';
-  } else {
-    document.getElementById('res-emerg').style.display = 'none';
-    document.getElementById('ph-emerg').style.display = 'block';
-  }
+function calcEmerg(){
+  const g=parseFloat(document.getElementById('gastos-mes').value)||0;
+  if(g>0){
+    const fondo=g*mesesEmerg,cuota=Math.round(g*.2),meses=cuota>0?Math.ceil(fondo/cuota):0;
+    document.getElementById('r-fondo').textContent='$'+Math.round(fondo).toLocaleString('es-AR');
+    document.getElementById('r-desc').textContent='Para cubrir '+mesesEmerg+' meses de gastos esenciales';
+    document.getElementById('r-cuota').textContent='$'+cuota.toLocaleString('es-AR')+' / mes';
+    document.getElementById('r-tiempo').textContent='Lo alcanzás en aprox. '+meses+' meses ahorrando el 20%';
+    document.getElementById('res-emerg').style.display='block';
+    document.getElementById('ph-emerg').style.display='none';
+  }else{document.getElementById('res-emerg').style.display='none';document.getElementById('ph-emerg').style.display='block';}
 }
 
-function renderMetas() {
-  const lista = document.getElementById('lista-metas');
-  lista.innerHTML = '';
-  metas.forEach(m => {
-    const pct = Math.min(100, Math.round((m.actual/m.total)*100));
-    const esCorto = m.plazo === 'Corto plazo';
-    const color = esCorto ? 'var(--verde)' : 'var(--dorado)';
-    const barClass = esCorto ? 'progress-fill' : 'progress-fill dorado';
-    const emojis = {'emergencia':'🛡️','notebook':'💻','notebook':'💻','vacacion':'✈️','auto':'🚗','casa':'🏠'};
-    let emoji = '🎯';
-    const nl = m.nombre.toLowerCase();
-    for (const [k,v] of Object.entries(emojis)) { if (nl.includes(k)) { emoji=v; break; } }
-    const div = document.createElement('div');
-    div.className = 'meta-card';
-    div.innerHTML = `
-      <div class="meta-header">
-        <div><div class="meta-name">${emoji} ${m.nombre}</div><div class="meta-tipo">${m.plazo} · Meta SMART</div></div>
-        <div class="meta-pct" style="color:${color}">${pct}%</div>
-      </div>
-      <div class="progress-bar"><div class="${barClass}" style="width:${pct}%"></div></div>
-      <div class="meta-amounts"><span>$${m.actual.toLocaleString('es-AR')} ahorrado</span><span>Meta: $${m.total.toLocaleString('es-AR')}</span></div>
-      <div class="meta-actions">
-        <button class="btn-meta-edit" onclick="abrirModal(${m.id})">✏️ Editar</button>
-        <button class="btn-meta-del" onclick="borrarMeta(${m.id})">🗑️ Borrar</button>
-      </div>`;
+function renderMetas(){
+  const lista=document.getElementById('lista-metas');
+  lista.innerHTML='';
+  document.getElementById('stat-metas').textContent=metas.length;
+  metas.forEach(m=>{
+    const pct=Math.min(100,Math.round((m.actual/m.total)*100));
+    const esCorto=m.plazo==='Corto plazo';
+    const color=esCorto?'var(--verde)':'var(--dorado)';
+    const barClass=esCorto?'progress-fill':'progress-fill dorado';
+    const nl=m.nombre.toLowerCase();
+    let emoji='🎯';
+    if(nl.includes('emergencia'))emoji='🛡️';
+    else if(nl.includes('notebook')||nl.includes('compu')||nl.includes('laptop'))emoji='💻';
+    else if(nl.includes('vacacion')||nl.includes('viaje'))emoji='✈️';
+    else if(nl.includes('auto')||nl.includes('coche'))emoji='🚗';
+    else if(nl.includes('casa')||nl.includes('depto'))emoji='🏠';
+    const div=document.createElement('div');
+    div.className='meta-card';
+    div.innerHTML='<div class="meta-header"><div><div class="meta-name">'+emoji+' '+m.nombre+'</div><div class="meta-tipo">'+m.plazo+' · Meta SMART</div></div><div class="meta-pct" style="color:'+color+'">'+pct+'%</div></div><div class="progress-bar"><div class="'+barClass+'" style="width:'+pct+'%"></div></div><div class="meta-amounts"><span>$'+m.actual.toLocaleString('es-AR')+' ahorrado</span><span>Meta: $'+m.total.toLocaleString('es-AR')+'</span></div><div class="meta-actions"><button class="btn-meta-edit" onclick="abrirModal('+m.id+')">✏️ Editar</button><button class="btn-meta-del" onclick="borrarMeta('+m.id+')">🗑️ Borrar</button></div>';
     lista.appendChild(div);
   });
 }
 
-function abrirModal(id) {
-  editandoId = id;
-  document.getElementById('modal-titulo').textContent = id ? '✏️ Editar Meta' : '🎯 Nueva Meta SMART';
-  if (id) {
-    const m = metas.find(x => x.id===id);
-    document.getElementById('meta-nombre').value = m.nombre;
-    document.getElementById('meta-plazo').value = m.plazo;
-    document.getElementById('meta-total').value = m.total;
-    document.getElementById('meta-actual').value = m.actual;
-  } else {
-    ['meta-nombre','meta-total','meta-actual'].forEach(id => document.getElementById(id).value='');
-    document.getElementById('meta-plazo').value = 'Corto plazo';
-  }
+function abrirModal(id){
+  editandoId=id;
+  document.getElementById('modal-titulo').textContent=id?'✏️ Editar Meta':'🎯 Nueva Meta SMART';
+  if(id){const m=metas.find(x=>x.id===id);document.getElementById('meta-nombre').value=m.nombre;document.getElementById('meta-plazo').value=m.plazo;document.getElementById('meta-total').value=m.total;document.getElementById('meta-actual').value=m.actual;}
+  else{['meta-nombre','meta-total','meta-actual'].forEach(id=>document.getElementById(id).value='');document.getElementById('meta-plazo').value='Corto plazo';}
   document.getElementById('modal-meta').classList.add('active');
 }
 
-function cerrarModal() { document.getElementById('modal-meta').classList.remove('active'); editandoId=null; }
+function cerrarModal(){document.getElementById('modal-meta').classList.remove('active');editandoId=null;}
 
-function guardarMeta() {
-  const nombre = document.getElementById('meta-nombre').value.trim();
-  const total = parseFloat(document.getElementById('meta-total').value)||0;
-  let actual = parseFloat(document.getElementById('meta-actual').value)||0;
-  const plazo = document.getElementById('meta-plazo').value;
-  if (!nombre||total<=0) { alert('Completá el nombre y el monto objetivo.'); return; }
-  if (actual>total) actual=total;
-  if (editandoId) {
-    const m = metas.find(x=>x.id===editandoId);
-    Object.assign(m, {nombre,plazo,total,actual});
-  } else {
-    metas.push({id:nextId++,nombre,plazo,total,actual});
-  }
-  cerrarModal();
-  renderMetas();
+function guardarMeta(){
+  const nombre=document.getElementById('meta-nombre').value.trim();
+  const total=parseFloat(document.getElementById('meta-total').value)||0;
+  let actual=parseFloat(document.getElementById('meta-actual').value)||0;
+  const plazo=document.getElementById('meta-plazo').value;
+  if(!nombre||total<=0){alert('Completá el nombre y el monto objetivo.');return;}
+  if(actual>total)actual=total;
+  if(editandoId){const m=metas.find(x=>x.id===editandoId);Object.assign(m,{nombre,plazo,total,actual});}
+  else{metas.push({id:nextId++,nombre,plazo,total,actual});}
+  cerrarModal();renderMetas();
 }
 
-function borrarMeta(id) {
-  if (!confirm('¿Borrar esta meta?')) return;
-  metas = metas.filter(m=>m.id!==id);
-  renderMetas();
+function borrarMeta(id){if(!confirm('¿Borrar esta meta?'))return;metas=metas.filter(m=>m.id!==id);renderMetas();}
+
+function irWhatsApp(){
+  const msg=usuarioNombre?'Hola Anabella, soy '+usuarioNombre+' y quiero agendar una sesión de coaching financiero.':'Hola Anabella, quiero agendar una sesión de coaching financiero.';
+  window.open('https://wa.me/542923433191?text='+encodeURIComponent(msg),'_blank');
 }
 
-function irWhatsApp() {
-  const msg = usuarioNombre
-    ? `Hola Anabella, soy ${usuarioNombre} y quiero agendar una sesión de coaching financiero.`
-    : 'Hola Anabella, quiero agendar una sesión de coaching financiero.';
-  window.open('https://wa.me/542923433191?text='+encodeURIComponent(msg), '_blank');
-}
-
-// Service Worker para PWA
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(()=>{});
-}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 </script>
 </body>
 </html>
