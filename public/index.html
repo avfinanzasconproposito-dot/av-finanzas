@@ -216,6 +216,10 @@ body{height:100%;font-family:Arial,sans-serif;background:var(--verde-fondo);over
   </div>
   <div class="content">
     <div class="section-title">Los 7 Hábitos · Checklist de hoy</div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">
+  <div class="section-title" style="margin-bottom:0">Los 7 Hábitos · Checklist de hoy</div>
+  <button onclick="reiniciarHabitos()" style="padding:5px 10px;background:#FEECEC;color:#C0392B;border:1px solid #f5c0c0;border-radius:8px;font-size:11px;cursor:pointer;font-weight:700;">🔄 Nuevo día</button>
+</div>
     <div id="tracker-list">
       <div class="tracker-row"><div class="tracker-check" onclick="toggleCheck(this)"></div><div class="tracker-text">Revisé mi presupuesto hoy</div></div>
       <div class="tracker-row"><div class="tracker-check" onclick="toggleCheck(this)"></div><div class="tracker-text">Evité una compra impulsiva</div></div>
