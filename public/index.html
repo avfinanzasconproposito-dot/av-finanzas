@@ -325,7 +325,8 @@ window.addEventListener('load',()=>{
   const codigoQR=params.get('codigo');
   if(codigoQR) document.getElementById('codigo-input').value=codigoQR.toUpperCase();
   const sesion=localStorage.getItem('av_sesion');
-  if(sesion){
+  if(sesion)const metasGuardadas=localStorage.getItem('av_metas');
+if(metasGuardadas) metas=JSON.parse(metasGuardadas);{
     const datos=JSON.parse(sesion);
     usuarioNombre=datos.nombre;
     aplicarSaludo(datos.nombre);
@@ -377,12 +378,39 @@ async function validarRegistro(){
 function aplicarSaludo(nombre){
   document.getElementById('saludo-header').textContent='Hola, '+nombre+' 👋';
   document.getElementById('greeting-title').textContent='¡Bienvenid@, '+nombre+'!';
+  cargarHabitos();
 }
 
 function toggleCheck(el){
   const isDone=el.classList.toggle('done');
   el.nextElementSibling.classList.toggle('done',isDone);
   el.textContent=isDone?'✓':'';
+  actualizarContador();
+  guardarHabitos();
+}
+
+function guardarHabitos(){
+  const estados=[];
+  document.querySelectorAll('#tracker-list .tracker-check').forEach(el=>{
+    estados.push(el.classList.contains('done'));
+  });
+  localStorage.setItem('habitos_hoy', JSON.stringify(estados));
+  localStorage.setItem('habitos_fecha', new Date().toDateString());
+}
+
+function cargarHabitos(){
+  const fecha=localStorage.getItem('habitos_fecha');
+  const hoy=new Date().toDateString();
+  if(fecha !== hoy){ localStorage.removeItem('habitos_hoy'); return; }
+  const estados=JSON.parse(localStorage.getItem('habitos_hoy')||'[]');
+  const checks=document.querySelectorAll('#tracker-list .tracker-check');
+  estados.forEach((done,i)=>{
+    if(done && checks[i]){
+      checks[i].classList.add('done');
+      checks[i].textContent='✓';
+      checks[i].nextElementSibling.classList.add('done');
+    }
+  });
   actualizarContador();
 }
 
@@ -474,23 +502,26 @@ function guardarMeta(){
   if(actual>total)actual=total;
   if(editandoId){const m=metas.find(x=>x.id===editandoId);Object.assign(m,{nombre,plazo,total,actual});}
   else{metas.push({id:nextId++,nombre,plazo,total,actual});}
+  localStorage.setItem('av_metas', JSON.stringify(metas));
   cerrarModal();renderMetas();
 }
 
-function borrarMeta(id){if(!confirm('¿Borrar esta meta?'))return;metas=metas.filter(m=>m.id!==id);renderMetas();}
+function borrarMeta(id){if(!confirm('¿Borrar esta meta?'))return;metas=metas.filter(m=>m.id!==id);renderMetas(); localStorage.setItem('av_metas', JSON.stringify(metas));}
 
 function irWhatsApp(){
   const msg=usuarioNombre?'Hola Anabella, soy '+usuarioNombre+' y quiero agendar una sesión de coaching financiero.':'Hola Anabella, quiero agendar una sesión de coaching financiero.';
   window.open('https://wa.me/542923433191?text='+encodeURIComponent(msg),'_blank');
 }
-function reiniciarHabitos() {
-  if (!confirm('¿Reiniciar el checklist de hoy?')) return;
-  document.querySelectorAll('#tracker-list .tracker-check').forEach(el => {
+function reiniciarHabitos(){
+  if(!confirm('¿Reiniciar el checklist de hoy?')) return;
+  document.querySelectorAll('#tracker-list .tracker-check').forEach(el=>{
     el.classList.remove('done');
-    el.textContent = '';
+    el.textContent='';
     el.nextElementSibling.classList.remove('done');
   });
   actualizarContador();
+  localStorage.removeItem('habitos_hoy');
+  localStorage.removeItem('habitos_fecha');
 }
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 </script>
