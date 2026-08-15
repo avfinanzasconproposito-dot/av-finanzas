@@ -215,11 +215,10 @@ body{height:100%;font-family:Arial,sans-serif;background:var(--verde-fondo);over
     <div class="nav-tab" onclick="switchTab('metas')"><span class="nav-tab-icon">🎯</span>Metas</div>
   </div>
   <div class="content">
-    
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">
-  <div class="section-title" style="margin-bottom:0">Los 7 Hábitos · Checklist de hoy</div>
-  <button onclick="reiniciarHabitos()" style="padding:5px 10px;background:#FEECEC;color:#C0392B;border:1px solid #f5c0c0;border-radius:8px;font-size:11px;cursor:pointer;font-weight:700;">🔄 Nuevo día</button>
-</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">
+      <div class="section-title" style="margin-bottom:0">Los 7 Hábitos · Checklist de hoy</div>
+      <button onclick="reiniciarHabitos()" style="padding:5px 10px;background:#FEECEC;color:#C0392B;border:1px solid #f5c0c0;border-radius:8px;font-size:11px;cursor:pointer;font-weight:700;">🔄 Nuevo día</button>
+    </div>
     <div id="tracker-list">
       <div class="tracker-row"><div class="tracker-check" onclick="toggleCheck(this)"></div><div class="tracker-text">Revisé mi presupuesto hoy</div></div>
       <div class="tracker-row"><div class="tracker-check" onclick="toggleCheck(this)"></div><div class="tracker-text">Evité una compra impulsiva</div></div>
@@ -325,10 +324,11 @@ window.addEventListener('load',()=>{
   const codigoQR=params.get('codigo');
   if(codigoQR) document.getElementById('codigo-input').value=codigoQR.toUpperCase();
   const sesion=localStorage.getItem('av_sesion');
-  if(sesion)const metasGuardadas=localStorage.getItem('av_metas');
-if(metasGuardadas) metas=JSON.parse(metasGuardadas);{
+  if(sesion){
     const datos=JSON.parse(sesion);
     usuarioNombre=datos.nombre;
+    const metasGuardadas=localStorage.getItem('av_metas');
+    if(metasGuardadas){ metas=JSON.parse(metasGuardadas); nextId=metas.length>0?Math.max(...metas.map(m=>m.id))+1:1; }
     aplicarSaludo(datos.nombre);
     renderMetas();
     actualizarContador();
@@ -339,6 +339,7 @@ if(metasGuardadas) metas=JSON.parse(metasGuardadas);{
 });
 
 function switchScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('screen-'+id).classList.add('active');}
+
 function switchTab(tab){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
@@ -394,18 +395,18 @@ function guardarHabitos(){
   document.querySelectorAll('#tracker-list .tracker-check').forEach(el=>{
     estados.push(el.classList.contains('done'));
   });
-  localStorage.setItem('habitos_hoy', JSON.stringify(estados));
-  localStorage.setItem('habitos_fecha', new Date().toDateString());
+  localStorage.setItem('habitos_hoy',JSON.stringify(estados));
+  localStorage.setItem('habitos_fecha',new Date().toDateString());
 }
 
 function cargarHabitos(){
   const fecha=localStorage.getItem('habitos_fecha');
   const hoy=new Date().toDateString();
-  if(fecha !== hoy){ localStorage.removeItem('habitos_hoy'); return; }
+  if(fecha!==hoy){localStorage.removeItem('habitos_hoy');return;}
   const estados=JSON.parse(localStorage.getItem('habitos_hoy')||'[]');
   const checks=document.querySelectorAll('#tracker-list .tracker-check');
   estados.forEach((done,i)=>{
-    if(done && checks[i]){
+    if(done&&checks[i]){
       checks[i].classList.add('done');
       checks[i].textContent='✓';
       checks[i].nextElementSibling.classList.add('done');
@@ -414,12 +415,24 @@ function cargarHabitos(){
   actualizarContador();
 }
 
+function reiniciarHabitos(){
+  if(!confirm('¿Reiniciar el checklist de hoy?'))return;
+  document.querySelectorAll('#tracker-list .tracker-check').forEach(el=>{
+    el.classList.remove('done');
+    el.textContent='';
+    el.nextElementSibling.classList.remove('done');
+  });
+  actualizarContador();
+  localStorage.removeItem('habitos_hoy');
+  localStorage.removeItem('habitos_fecha');
+}
+
 function actualizarContador(){
   const total=document.querySelectorAll('#tracker-list .tracker-check').length;
   const hechos=document.querySelectorAll('#tracker-list .tracker-check.done').length;
   document.getElementById('contador-habitos').textContent=hechos+'/'+total;
   document.getElementById('barra-habitos').style.width=Math.round((hechos/total)*100)+'%';
-  if(hechos===total&&total>0) document.getElementById('streak-badge').textContent='🔥 ¡'+total+'/7 completados!';
+  if(hechos===total&&total>0)document.getElementById('streak-badge').textContent='🔥 ¡'+total+'/7 completados!';
 }
 
 function calcular5030(){
@@ -502,27 +515,23 @@ function guardarMeta(){
   if(actual>total)actual=total;
   if(editandoId){const m=metas.find(x=>x.id===editandoId);Object.assign(m,{nombre,plazo,total,actual});}
   else{metas.push({id:nextId++,nombre,plazo,total,actual});}
-  localStorage.setItem('av_metas', JSON.stringify(metas));
-  cerrarModal();renderMetas();
+  localStorage.setItem('av_metas',JSON.stringify(metas));
+  cerrarModal();
+  renderMetas();
 }
 
-function borrarMeta(id){if(!confirm('¿Borrar esta meta?'))return;metas=metas.filter(m=>m.id!==id);renderMetas(); localStorage.setItem('av_metas', JSON.stringify(metas));}
+function borrarMeta(id){
+  if(!confirm('¿Borrar esta meta?'))return;
+  metas=metas.filter(m=>m.id!==id);
+  localStorage.setItem('av_metas',JSON.stringify(metas));
+  renderMetas();
+}
 
 function irWhatsApp(){
   const msg=usuarioNombre?'Hola Anabella, soy '+usuarioNombre+' y quiero agendar una sesión de coaching financiero.':'Hola Anabella, quiero agendar una sesión de coaching financiero.';
   window.open('https://wa.me/542923433191?text='+encodeURIComponent(msg),'_blank');
 }
-function reiniciarHabitos(){
-  if(!confirm('¿Reiniciar el checklist de hoy?')) return;
-  document.querySelectorAll('#tracker-list .tracker-check').forEach(el=>{
-    el.classList.remove('done');
-    el.textContent='';
-    el.nextElementSibling.classList.remove('done');
-  });
-  actualizarContador();
-  localStorage.removeItem('habitos_hoy');
-  localStorage.removeItem('habitos_fecha');
-}
+
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 </script>
 </body>
