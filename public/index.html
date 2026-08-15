@@ -317,7 +317,8 @@ body{height:100%;font-family:Arial,sans-serif;background:var(--verde-fondo);over
 const SUPABASE_URL='https://xwvhtwfumdfgfobqwjxz.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3dmh0d2Z1bWRmZ2ZvYnF3anh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2OTIwOTIsImV4cCI6MjA5NDI2ODA5Mn0.MJRgcE-ylXkaG9pIJitWGLYTPuHwedHyRj8_h-KDA9c';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-let usuarioNombre='',mesesEmerg=3,metas=[],editandoId=null,nextId=1;
+
+let usuarioNombre='', usuarioCodigo='', mesesEmerg=3, metas=[], editandoId=null, nextId=1;
 
 window.addEventListener('load',()=>{
   const params=new URLSearchParams(window.location.search);
@@ -327,18 +328,19 @@ window.addEventListener('load',()=>{
   if(sesion){
     const datos=JSON.parse(sesion);
     usuarioNombre=datos.nombre;
-    const metasGuardadas=localStorage.getItem('av_metas');
-    if(metasGuardadas){ metas=JSON.parse(metasGuardadas); nextId=metas.length>0?Math.max(...metas.map(m=>m.id))+1:1; }
+    usuarioCodigo=datos.codigo;
     aplicarSaludo(datos.nombre);
-    renderMetas();
-    actualizarContador();
+    cargarDesdeSupa();
     switchTab('inicio');
   } else {
     switchScreen('registro');
   }
 });
 
-function switchScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('screen-'+id).classList.add('active');}
+function switchScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+}
 
 function switchTab(tab){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -359,19 +361,19 @@ async function validarRegistro(){
   switchScreen('loading');
   try{
     const{data:codData,error:codErr}=await sb.from('codigos').select('*').eq('codigo',codigo).single();
-    if(codErr||!codData){switchScreen('registro');err.textContent='⚠️ Código no válido. Verificá que lo copiaste bien del libro.';err.style.display='block';return;}
-    if(codData.usado){switchScreen('registro');err.textContent='🚫 Este código ya fue utilizado. Es de uso único y personal.';err.style.display='block';return;}
+    if(codErr||!codData){switchScreen('registro');err.textContent='⚠️ Código no válido.';err.style.display='block';return;}
+    if(codData.usado){switchScreen('registro');err.textContent='🚫 Este código ya fue utilizado.';err.style.display='block';return;}
     await sb.from('codigos').update({usado:true,fecha_uso:new Date().toISOString()}).eq('codigo',codigo);
     await sb.from('registros').insert([{nombre,email,codigo,fecha:new Date().toISOString()}]);
     localStorage.setItem('av_sesion',JSON.stringify({nombre,email,codigo}));
     usuarioNombre=nombre;
+    usuarioCodigo=codigo;
     aplicarSaludo(nombre);
-    renderMetas();
-    actualizarContador();
+    await cargarDesdeSupa();
     switchTab('inicio');
   }catch(e){
     switchScreen('registro');
-    err.textContent='⚠️ Error de conexión. Revisá tu internet e intentá de nuevo.';
+    err.textContent='⚠️ Error de conexión. Revisá tu internet.';
     err.style.display='block';
   }
 }
@@ -379,40 +381,61 @@ async function validarRegistro(){
 function aplicarSaludo(nombre){
   document.getElementById('saludo-header').textContent='Hola, '+nombre+' 👋';
   document.getElementById('greeting-title').textContent='¡Bienvenid@, '+nombre+'!';
-  cargarHabitos();
 }
 
+// ── SUPABASE: cargar hábitos y metas ──
+async function cargarDesdeSupa(){
+  try{
+    // Cargar hábitos
+    const{data:hData}=await sb.from('habitos_usuario').select('estados').eq('codigo',usuarioCodigo).single();
+    if(hData&&hData.estados){
+      const estados=JSON.parse(hData.estados);
+      const checks=document.querySelectorAll('#tracker-list .tracker-check');
+      estados.forEach((done,i)=>{
+        if(done&&checks[i]){
+          checks[i].classList.add('done');
+          checks[i].textContent='✓';
+          checks[i].nextElementSibling.classList.add('done');
+        }
+      });
+    }
+    // Cargar metas
+    const{data:mData}=await sb.from('metas_usuario').select('metas').eq('codigo',usuarioCodigo).single();
+    if(mData&&mData.metas){
+      metas=JSON.parse(mData.metas);
+      nextId=metas.length>0?Math.max(...metas.map(m=>m.id))+1:1;
+    }
+    actualizarContador();
+    renderMetas();
+  }catch(e){
+    // Si no existe registro aún, está bien — es usuario nuevo
+    actualizarContador();
+    renderMetas();
+  }
+}
+
+async function guardarHabitosEnSupa(){
+  const estados=[];
+  document.querySelectorAll('#tracker-list .tracker-check').forEach(el=>{
+    estados.push(el.classList.contains('done'));
+  });
+  const estadosStr=JSON.stringify(estados);
+  // Upsert: insertar o actualizar
+  await sb.from('habitos_usuario').upsert({codigo:usuarioCodigo,estados:estadosStr,updated_at:new Date().toISOString()},{onConflict:'codigo'});
+}
+
+async function guardarMetasEnSupa(){
+  const metasStr=JSON.stringify(metas);
+  await sb.from('metas_usuario').upsert({codigo:usuarioCodigo,metas:metasStr,updated_at:new Date().toISOString()},{onConflict:'codigo'});
+}
+
+// ── HÁBITOS ──
 function toggleCheck(el){
   const isDone=el.classList.toggle('done');
   el.nextElementSibling.classList.toggle('done',isDone);
   el.textContent=isDone?'✓':'';
   actualizarContador();
-  guardarHabitos();
-}
-
-function guardarHabitos(){
-  const estados=[];
-  document.querySelectorAll('#tracker-list .tracker-check').forEach(el=>{
-    estados.push(el.classList.contains('done'));
-  });
-  localStorage.setItem('habitos_hoy',JSON.stringify(estados));
-  localStorage.setItem('habitos_fecha',new Date().toDateString());
-}
-
-function cargarHabitos(){
-  const fecha=localStorage.getItem('habitos_fecha');
-  const hoy=new Date().toDateString();
-  if(fecha!==hoy){localStorage.removeItem('habitos_hoy');return;}
-  const estados=JSON.parse(localStorage.getItem('habitos_hoy')||'[]');
-  const checks=document.querySelectorAll('#tracker-list .tracker-check');
-  estados.forEach((done,i)=>{
-    if(done&&checks[i]){
-      checks[i].classList.add('done');
-      checks[i].textContent='✓';
-      checks[i].nextElementSibling.classList.add('done');
-    }
-  });
-  actualizarContador();
+  guardarHabitosEnSupa();
 }
 
 function reiniciarHabitos(){
@@ -423,8 +446,7 @@ function reiniciarHabitos(){
     el.nextElementSibling.classList.remove('done');
   });
   actualizarContador();
-  localStorage.removeItem('habitos_hoy');
-  localStorage.removeItem('habitos_fecha');
+  guardarHabitosEnSupa();
 }
 
 function actualizarContador(){
@@ -432,9 +454,10 @@ function actualizarContador(){
   const hechos=document.querySelectorAll('#tracker-list .tracker-check.done').length;
   document.getElementById('contador-habitos').textContent=hechos+'/'+total;
   document.getElementById('barra-habitos').style.width=Math.round((hechos/total)*100)+'%';
-  if(hechos===total&&total>0)document.getElementById('streak-badge').textContent='🔥 ¡'+total+'/7 completados!';
+  if(hechos===total&&total>0) document.getElementById('streak-badge').textContent='🔥 ¡'+total+'/7 completados!';
 }
 
+// ── CALCULADORAS ──
 function calcular5030(){
   const val=parseFloat(document.getElementById('ingreso').value)||0;
   if(val>0){
@@ -443,7 +466,10 @@ function calcular5030(){
     document.getElementById('r-aho').textContent='$'+Math.round(val*.2).toLocaleString('es-AR');
     document.getElementById('res5030').style.display='block';
     document.getElementById('ph-5030').style.display='none';
-  }else{document.getElementById('res5030').style.display='none';document.getElementById('ph-5030').style.display='block';}
+  }else{
+    document.getElementById('res5030').style.display='none';
+    document.getElementById('ph-5030').style.display='block';
+  }
 }
 
 function switchCalc(tipo){
@@ -470,9 +496,13 @@ function calcEmerg(){
     document.getElementById('r-tiempo').textContent='Lo alcanzás en aprox. '+meses+' meses ahorrando el 20%';
     document.getElementById('res-emerg').style.display='block';
     document.getElementById('ph-emerg').style.display='none';
-  }else{document.getElementById('res-emerg').style.display='none';document.getElementById('ph-emerg').style.display='block';}
+  }else{
+    document.getElementById('res-emerg').style.display='none';
+    document.getElementById('ph-emerg').style.display='block';
+  }
 }
 
+// ── METAS ──
 function renderMetas(){
   const lista=document.getElementById('lista-metas');
   lista.innerHTML='';
@@ -499,32 +529,44 @@ function renderMetas(){
 function abrirModal(id){
   editandoId=id;
   document.getElementById('modal-titulo').textContent=id?'✏️ Editar Meta':'🎯 Nueva Meta SMART';
-  if(id){const m=metas.find(x=>x.id===id);document.getElementById('meta-nombre').value=m.nombre;document.getElementById('meta-plazo').value=m.plazo;document.getElementById('meta-total').value=m.total;document.getElementById('meta-actual').value=m.actual;}
-  else{['meta-nombre','meta-total','meta-actual'].forEach(id=>document.getElementById(id).value='');document.getElementById('meta-plazo').value='Corto plazo';}
+  if(id){
+    const m=metas.find(x=>x.id===id);
+    document.getElementById('meta-nombre').value=m.nombre;
+    document.getElementById('meta-plazo').value=m.plazo;
+    document.getElementById('meta-total').value=m.total;
+    document.getElementById('meta-actual').value=m.actual;
+  }else{
+    ['meta-nombre','meta-total','meta-actual'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('meta-plazo').value='Corto plazo';
+  }
   document.getElementById('modal-meta').classList.add('active');
 }
 
 function cerrarModal(){document.getElementById('modal-meta').classList.remove('active');editandoId=null;}
 
-function guardarMeta(){
+async function guardarMeta(){
   const nombre=document.getElementById('meta-nombre').value.trim();
   const total=parseFloat(document.getElementById('meta-total').value)||0;
   let actual=parseFloat(document.getElementById('meta-actual').value)||0;
   const plazo=document.getElementById('meta-plazo').value;
   if(!nombre||total<=0){alert('Completá el nombre y el monto objetivo.');return;}
   if(actual>total)actual=total;
-  if(editandoId){const m=metas.find(x=>x.id===editandoId);Object.assign(m,{nombre,plazo,total,actual});}
-  else{metas.push({id:nextId++,nombre,plazo,total,actual});}
-  localStorage.setItem('av_metas',JSON.stringify(metas));
+  if(editandoId){
+    const m=metas.find(x=>x.id===editandoId);
+    Object.assign(m,{nombre,plazo,total,actual});
+  }else{
+    metas.push({id:nextId++,nombre,plazo,total,actual});
+  }
   cerrarModal();
   renderMetas();
+  await guardarMetasEnSupa();
 }
 
-function borrarMeta(id){
+async function borrarMeta(id){
   if(!confirm('¿Borrar esta meta?'))return;
   metas=metas.filter(m=>m.id!==id);
-  localStorage.setItem('av_metas',JSON.stringify(metas));
   renderMetas();
+  await guardarMetasEnSupa();
 }
 
 function irWhatsApp(){
