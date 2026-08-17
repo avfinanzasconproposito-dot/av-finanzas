@@ -329,6 +329,11 @@ window.addEventListener('load',()=>{
     const datos=JSON.parse(sesion);
     usuarioNombre=datos.nombre;
     usuarioCodigo=datos.codigo;
+    // Si no tiene fechaRegistro (usuarios viejos), la agregamos ahora
+    if(!datos.fechaRegistro){
+      datos.fechaRegistro=new Date().toISOString();
+      localStorage.setItem('av_sesion',JSON.stringify(datos));
+    }
     aplicarSaludo(datos.nombre);
     cargarDesdeSupa();
     switchTab('inicio');
@@ -365,7 +370,8 @@ async function validarRegistro(){
     if(codData.usado){switchScreen('registro');err.textContent='🚫 Este código ya fue utilizado.';err.style.display='block';return;}
     await sb.from('codigos').update({usado:true,fecha_uso:new Date().toISOString()}).eq('codigo',codigo);
     await sb.from('registros').insert([{nombre,email,codigo,fecha:new Date().toISOString()}]);
-    localStorage.setItem('av_sesion',JSON.stringify({nombre,email,codigo}));
+    const fechaRegistro=new Date().toISOString();
+    localStorage.setItem('av_sesion',JSON.stringify({nombre,email,codigo,fechaRegistro}));
     usuarioNombre=nombre;
     usuarioCodigo=codigo;
     aplicarSaludo(nombre);
@@ -381,6 +387,20 @@ async function validarRegistro(){
 function aplicarSaludo(nombre){
   document.getElementById('saludo-header').textContent='Hola, '+nombre+' 👋';
   document.getElementById('greeting-title').textContent='¡Bienvenid@, '+nombre+'!';
+  // Calcular días desde el registro
+  const sesion=JSON.parse(localStorage.getItem('av_sesion')||'{}');
+  const fechaRegistro=sesion.fechaRegistro;
+  if(fechaRegistro){
+    const inicio=new Date(fechaRegistro);
+    const hoy=new Date();
+    const diff=Math.floor((hoy-inicio)/(1000*60*60*24))+1;
+    const badge=document.getElementById('streak-badge');
+    if(diff===1) badge.textContent='🔥 Día 1 — ¡Bienvenid@!';
+    else if(diff===7) badge.textContent='🔥 Día 7 — ¡Una semana!';
+    else if(diff===30) badge.textContent='🔥 Día 30 — ¡Un mes!';
+    else if(diff===100) badge.textContent='🔥 Día 100 — ¡Increíble!';
+    else badge.textContent='🔥 Día '+diff;
+  }
 }
 
 // ── SUPABASE: cargar hábitos y metas ──
