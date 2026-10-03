@@ -329,7 +329,6 @@ window.addEventListener('load',()=>{
     const datos=JSON.parse(sesion);
     usuarioNombre=datos.nombre;
     usuarioCodigo=datos.codigo;
-    // Si no tiene fechaRegistro (usuarios viejos), la agregamos ahora
     if(!datos.fechaRegistro){
       datos.fechaRegistro=new Date().toISOString();
       localStorage.setItem('av_sesion',JSON.stringify(datos));
@@ -338,9 +337,41 @@ window.addEventListener('load',()=>{
     cargarDesdeSupa();
     switchTab('inicio');
   } else {
-    switchScreen('registro');
+    // localStorage vacío — puede ser iPhone con app instalada
+    // Intentar recuperar sesión desde Supabase usando el código del QR
+    const codigoQR=params.get('codigo');
+    if(codigoQR){
+      // Tiene código en URL, intentar recuperar sesión
+      recuperarSesionDesdeQR(codigoQR);
+    } else {
+      // Sin código y sin sesión — mostrar registro normal
+      switchScreen('registro');
+    }
   }
 });
+
+async function recuperarSesionDesdeQR(codigo){
+  try{
+    switchScreen('loading');
+    const{data:sesData,error}=await sb.from('sesiones').select('*').eq('codigo',codigo).single();
+    if(sesData&&!error){
+      // Sesión encontrada en Supabase — restaurar
+      const datos={nombre:sesData.nombre,email:sesData.email,codigo:sesData.codigo,fechaRegistro:sesData.fecha_registro};
+      localStorage.setItem('av_sesion',JSON.stringify(datos));
+      usuarioNombre=datos.nombre;
+      usuarioCodigo=datos.codigo;
+      aplicarSaludo(datos.nombre);
+      await cargarDesdeSupa();
+      switchTab('inicio');
+    } else {
+      // Código no registrado aún — mostrar registro con código precargado
+      document.getElementById('codigo-input').value=codigo.toUpperCase();
+      switchScreen('registro');
+    }
+  }catch(e){
+    switchScreen('registro');
+  }
+}
 
 function switchScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -369,8 +400,10 @@ async function validarRegistro(){
     if(codErr||!codData){switchScreen('registro');err.textContent='⚠️ Código no válido.';err.style.display='block';return;}
     if(codData.usado){switchScreen('registro');err.textContent='🚫 Este código ya fue utilizado.';err.style.display='block';return;}
     await sb.from('codigos').update({usado:true,fecha_uso:new Date().toISOString()}).eq('codigo',codigo);
-    await sb.from('registros').insert([{nombre,email,codigo,fecha:new Date().toISOString()}]);
     const fechaRegistro=new Date().toISOString();
+    await sb.from('registros').insert([{nombre,email,codigo,fecha:fechaRegistro,fecha_registro:fechaRegistro}]);
+    // Guardar sesión en Supabase para recuperarla en iPhone
+    await sb.from('sesiones').upsert({codigo,nombre,email,fecha_registro:fechaRegistro,updated_at:new Date().toISOString()},{onConflict:'codigo'});
     localStorage.setItem('av_sesion',JSON.stringify({nombre,email,codigo,fechaRegistro}));
     usuarioNombre=nombre;
     usuarioCodigo=codigo;
@@ -406,6 +439,16 @@ function aplicarSaludo(nombre){
 // ── SUPABASE: cargar hábitos y metas ──
 async function cargarDesdeSupa(){
   try{
+    // Cargar fecha de registro desde Supabase si no está guardada localmente
+    const sesionLocal=JSON.parse(localStorage.getItem('av_sesion')||'{}');
+    if(!sesionLocal.fechaRegistro){
+      const{data:regData}=await sb.from('registros').select('fecha_registro').eq('codigo',usuarioCodigo).single();
+      if(regData&&regData.fecha_registro){
+        sesionLocal.fechaRegistro=regData.fecha_registro;
+        localStorage.setItem('av_sesion',JSON.stringify(sesionLocal));
+        aplicarSaludo(usuarioNombre);
+      }
+    }
     // Cargar hábitos
     const{data:hData}=await sb.from('habitos_usuario').select('estados').eq('codigo',usuarioCodigo).single();
     if(hData&&hData.estados){
