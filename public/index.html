@@ -338,18 +338,14 @@ window.addEventListener('load',()=>{
     switchTab('inicio');
   } else {
     // localStorage vacío — puede ser iPhone con app instalada
+    // Intentar recuperar sesión desde Supabase usando el código del QR
     const codigoQR=params.get('codigo');
     if(codigoQR){
-      // Tiene código en URL — intentar recuperar sesión
+      // Tiene código en URL, intentar recuperar sesión
       recuperarSesionDesdeQR(codigoQR);
     } else {
-      // Sin código en URL — intentar recuperar por email guardado
-      const emailGuardado=localStorage.getItem('av_email');
-      if(emailGuardado){
-        recuperarSesionPorEmail(emailGuardado);
-      } else {
-        switchScreen('registro');
-      }
+      // Sin código y sin sesión — mostrar registro normal
+      switchScreen('registro');
     }
   }
 });
@@ -456,23 +452,13 @@ async function cargarDesdeSupa(){
     // Cargar hábitos
     const{data:hData}=await sb.from('habitos_usuario').select('estados').eq('codigo',usuarioCodigo).single();
     if(hData&&hData.estados){
-      let estados;
-      try{ estados=JSON.parse(hData.estados); }catch(e){ estados=[]; }
+      const estados=JSON.parse(hData.estados);
       const checks=document.querySelectorAll('#tracker-list .tracker-check');
-      // Primero limpiar todos
-      checks.forEach(el=>{
-        el.classList.remove('done');
-        el.textContent='';
-        el.nextElementSibling.classList.remove('done');
-      });
-      // Luego aplicar los estados guardados
       estados.forEach((done,i)=>{
-        if(checks[i]){
-          if(done){
-            checks[i].classList.add('done');
-            checks[i].textContent='✓';
-            checks[i].nextElementSibling.classList.add('done');
-          }
+        if(done&&checks[i]){
+          checks[i].classList.add('done');
+          checks[i].textContent='✓';
+          checks[i].nextElementSibling.classList.add('done');
         }
       });
     }
